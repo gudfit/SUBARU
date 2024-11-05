@@ -10,7 +10,6 @@ A simple BASIC interpreter written in C++ that supports essential BASIC commands
 - Conditional branching (IF/THEN)
 - Comments (REM)
 - Simple arithmetic expressions
-- GOTO statements
 
 ## Building and Running
 
