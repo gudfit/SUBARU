@@ -1,0 +1,14 @@
+10 LET a = 5
+20 LET b = 3
+30 LET c = a + b
+40 PRINT "a + b = ", c
+50 LET d = a - b
+60 PRINT "a - b = ", d
+70 LET e = a * b
+80 PRINT "a * b = ", e
+90 LET f = a / b
+100 PRINT "a / b = ", f
+110 LET g = (a + b) * 2
+120 PRINT "(a + b) * 2 = ", g
+130 LET h = a * b + c / d
+140 PRINT "a * b + c / d = ", h
