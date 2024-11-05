@@ -3,7 +3,7 @@ CXX        = g++
 NAME       = vvtbi
 SRCDIR     = src
 OBJDIR     = obj
-CXXFLAGS   = -Wall -Werror -O2 -Wextra -pedantic -std=c++20
+CXXFLAGS   = -Wall -Werror -O2 -Wextra -pedantic -std=c++20 -DNDEBUG
 #############################################################
 #### DO NOT EDIT BELOW THIS LINE ############################
 VERSION    = 3.0
