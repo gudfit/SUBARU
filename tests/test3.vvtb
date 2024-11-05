@@ -1,0 +1,6 @@
+REM This is a sample VVTB program!
+10 LET a = 5
+20 PRINT "The value of a is: ", a
+30 IF a > 3 THEN 50
+40 PRINT "This won't be printed"
+50 PRINT "Done!"
