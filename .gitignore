@@ -1,0 +1,6 @@
+# Ignore object files and directories
+*.o
+obj/
+
+# Ignore the executable
+vvtbi
