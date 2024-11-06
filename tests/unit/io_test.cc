@@ -1,4 +1,4 @@
-#include "../../src/io.h"
+#include "../../include/io.h"
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 
