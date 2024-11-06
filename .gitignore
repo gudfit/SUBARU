@@ -4,6 +4,8 @@ obj/
 
 # Ignore the executable
 vvtbi
+run_tests
+.clang-format
 
 # IDE
 .vscode/

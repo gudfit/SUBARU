@@ -10,13 +10,15 @@
  * @param filename The path to the file to be opened for reading
  * @throws std::runtime_error If the file cannot be opened
  */
-IO::IO(const std::string &filename)
-    : filename_(filename), file_stream_(filename, std::ios::binary),
-      current_char_('\0') {
-  if (!file_stream_.is_open()) {
-    throw std::runtime_error("Failed to open file: " + filename_);
-  }
-  load_next();
+IO::IO(const std::string& filename)
+  : filename_(filename)
+  , file_stream_(filename, std::ios::binary)
+  , current_char_('\0')
+{
+    if (!file_stream_.is_open()) {
+        throw std::runtime_error("Failed to open file: " + filename_);
+    }
+    load_next();
 }
 
 /**
@@ -24,7 +26,10 @@ IO::IO(const std::string &filename)
  *
  * Ensures the file stream is properly closed when the object is destroyed
  */
-IO::~IO() { close(); }
+IO::~IO()
+{
+    close();
+}
 
 /**
  * load_next
@@ -35,12 +40,14 @@ IO::~IO() { close(); }
  * @param void
  * @return void
  */
-void IO::load_next() {
-  if (file_stream_.get(current_char_)) {
-    // Successfully read character
-  } else {
-    current_char_ = '\0';
-  }
+void
+IO::load_next()
+{
+    if (file_stream_.get(current_char_)) {
+        // Successfully read character
+    } else {
+        current_char_ = '\0';
+    }
 }
 
 /**
@@ -51,7 +58,11 @@ void IO::load_next() {
  * @param void
  * @return void
  */
-void IO::next() { load_next(); }
+void
+IO::next()
+{
+    load_next();
+}
 
 /**
  * reset
@@ -62,10 +73,12 @@ void IO::next() { load_next(); }
  * @param void
  * @return void
  */
-void IO::reset() {
-  file_stream_.clear();
-  file_stream_.seekg(0, std::ios::beg);
-  load_next();
+void
+IO::reset()
+{
+    file_stream_.clear();
+    file_stream_.seekg(0, std::ios::beg);
+    load_next();
 }
 
 /**
@@ -76,10 +89,12 @@ void IO::reset() {
  * @param void
  * @return void
  */
-void IO::close() {
-  if (file_stream_.is_open()) {
-    file_stream_.close();
-  }
+void
+IO::close()
+{
+    if (file_stream_.is_open()) {
+        file_stream_.close();
+    }
 }
 
 /**
@@ -92,14 +107,16 @@ void IO::close() {
  * @param n The maximum number of characters to copy
  * @return void
  */
-void IO::to_string(char *dest, std::size_t n) {
-  std::size_t i = 0;
-  while (n > 0 && !eof()) {
-    dest[i++] = current_char_;
-    next();
-    --n;
-  }
-  dest[i] = '\0';
+void
+IO::to_string(char* dest, std::size_t n)
+{
+    std::size_t i = 0;
+    while (n > 0 && !eof()) {
+        dest[i++] = current_char_;
+        next();
+        --n;
+    }
+    dest[i] = '\0';
 }
 
 /**
@@ -111,14 +128,16 @@ void IO::to_string(char *dest, std::size_t n) {
  * @throws std::runtime_error If the new file cannot be opened
  * @return void
  */
-void IO::set(const std::string &filename) {
-  close();
-  filename_ = filename;
-  file_stream_.open(filename_, std::ios::binary);
-  if (!file_stream_.is_open()) {
-    throw std::runtime_error("Failed to open file: " + filename_);
-  }
-  load_next();
+void
+IO::set(const std::string& filename)
+{
+    close();
+    filename_ = filename;
+    file_stream_.open(filename_, std::ios::binary);
+    if (!file_stream_.is_open()) {
+        throw std::runtime_error("Failed to open file: " + filename_);
+    }
+    load_next();
 }
 
 /**
@@ -131,8 +150,10 @@ void IO::set(const std::string &filename) {
  * end)
  * @return void
  */
-void IO::seek(long offset, std::ios_base::seekdir whence) {
-  file_stream_.clear();
-  file_stream_.seekg(offset, whence);
-  load_next();
+void
+IO::seek(long offset, std::ios_base::seekdir whence)
+{
+    file_stream_.clear();
+    file_stream_.seekg(offset, whence);
+    load_next();
 }
