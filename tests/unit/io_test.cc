@@ -2,7 +2,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 
-// For Catch2 v3, we just use TEST_CASE without the CATCH_ prefix
 TEST_CASE("IO Basic File Operations", "[io]") {
   SECTION("Opening existing test files") {
     REQUIRE_NOTHROW(IO("tests/test.vvtb"));
@@ -79,5 +78,4 @@ TEST_CASE("IO File Switching", "[io]") {
   }
 }
 
-// Define main - this must be in only one source file
 #define CATCH_CONFIG_MAIN
