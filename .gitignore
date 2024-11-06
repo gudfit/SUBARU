@@ -4,3 +4,11 @@ obj/
 
 # Ignore the executable
 vvtbi
+
+# IDE
+.vscode/
+.idea/
+
+# OS specific
+.DS_Store
+*~
