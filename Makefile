@@ -32,7 +32,7 @@ $(NAME): $(OBJS)
 	@echo " the terms of the Apache License, Version 2.0."
 	@echo " For more information, see README and CHANGELOG."
 	@echo "         <nnamdidaniel114[at]gmail[dot]com>"
-	@echo "Idea by: <jahan.addison[at]jacata[dot]me>"
+	@echo "Idea by: <jahan[at]jahanaddison[dot]com>"
 	@echo "**************************************************"
 
 # Pattern rule for object files

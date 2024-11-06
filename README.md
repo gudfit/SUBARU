@@ -37,7 +37,7 @@ For details, see http://www.apache.org/licenses/LICENSE-2.0
 
 ## Acknowledgments
 
-- Original VVTBI concept by Jahan Addison (Mentor) `<jahan.addison[at]jacata[dot]me>`
+- Original VVTBI concept by Jahan Addison (Mentor) `<jahan[at]jahanaddison[dot]com>`
 - Special thanks to the original author for the inspiration and basic interpreter design
 - This version is maintained by Daniel `<nnamdidaniel114[at]gmail.com>`
 
