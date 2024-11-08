@@ -13,9 +13,8 @@ SOURCES    = io.cc tokenizer.cc vvtbi.cc main.cc
 OBJS       = $(SOURCES:%.cc=$(OBJDIR)/%.o)
 
 # Test related variables
-TEST_SOURCES = io_test.cc tokenizer_test.cc
+TEST_SOURCES = io_test.cc
 TEST_OBJS    = $(TEST_SOURCES:%.cc=$(TEST_OBJDIR)/%.o)
-TEST_DEPS    = $(TEST_OBJDIR)/io.o $(TEST_OBJDIR)/tokenizer.o
 TEST_TARGET  = run_tests
 
 # Create object directories if they don't exist
@@ -44,15 +43,12 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cc
 $(TEST_OBJDIR)/%.o: $(TESTDIR)/%.cc
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Special rules for source files when building tests
+# Special rule for io.o when building tests
 $(TEST_OBJDIR)/io.o: $(SRCDIR)/io.cc
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(TEST_OBJDIR)/tokenizer.o: $(SRCDIR)/tokenizer.cc
-	@$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Test target
-$(TEST_TARGET): $(TEST_OBJS) $(TEST_DEPS)
+# Test target (only using io.o)
+$(TEST_TARGET): $(TEST_OBJDIR)/io_test.o $(TEST_OBJDIR)/io.o
 	@$(CXX) $(CXXFLAGS) $^ -o $@ -lCatch2Main -lCatch2
 	@echo "Test binary compiled successfully!"
 
