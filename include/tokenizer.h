@@ -8,15 +8,13 @@
 #include <variant>
 #include <vector>
 
-class Tokenizer
-{
+class Tokenizer {
     public:
         // Constructor/Destructor
         explicit Tokenizer(const std::string& source);
         ~Tokenizer();
 
-        enum class TokenType
-        {
+        enum class TokenType {
             ERROR = 1,
             EOF_TOKEN,
             NUMBER,
@@ -44,8 +42,7 @@ class Tokenizer
             EOL
         };
 
-        struct KeywordToken
-        {
+        struct KeywordToken {
                 std::string keyword;
                 TokenType token;
         };
@@ -53,11 +50,11 @@ class Tokenizer
         using TokenData = std::variant<std::monostate, std::string, int, char>;
 
         // Token operations
+        TokenType current_token() const { return current_token_; }
         void reset();
         void reset(TokenType to);
-        TokenType current_token() const { return current_token_; }
-        void next_token();
         bool finished() const;
+        void next_token();
 
         // Line detection
         bool is_line_number();
