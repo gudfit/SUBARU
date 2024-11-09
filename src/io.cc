@@ -139,3 +139,21 @@ void IO::seek(long offset, std::ios_base::seekdir whence) {
         current_pos_ = content_.end();
     }
 }
+
+/**
+ * peek
+ *
+ * Returns the current character in the input stream without advancing the
+ * position. If at the end of the stream, returns '\0'.
+ *
+ * @param void
+ * @return char
+ */
+
+char IO::peek() {
+    if (current_pos_ != content_.end()) {
+        return *current_pos_;
+    } else {
+        return '\0'; // Return null character at EOF
+    }
+}
