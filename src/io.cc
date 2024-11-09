@@ -1,140 +1,141 @@
 #include "../include/io.h"
+#include <sstream>
 #include <stdexcept>
+
+/******************************************************************************/
 
 /**
  * IO Constructor
  *
- * @param filename The path to the file to be opened for reading
+ * @param filename The path to the file to be opened and loaded into memory
  * @throws std::runtime_error If the file cannot be opened
  */
 IO::IO(std::string_view filename)
-  : filename_(filename)
-  , file_stream_(filename_, std::ios::binary)
-  , current_char_('\0') {
-    if (!file_stream_.is_open()) {
-        throw std::runtime_error("Failed to open file: " +
-                                 std::string(filename));
-    }
-    load_next();
+  : filename_(filename) {
+    load_file();
 }
 
 /**
  * IO Destructor
  *
- * @param void
- * @return void
- * Ensures the file stream is properly closed when the object is destroyed
+ * Ensures resources are properly cleaned up when the object is destroyed
  */
 IO::~IO() noexcept { close(); }
 
 /**
- * load_next
- *
- * Internal helper function to load the next character from the file stream.
- * Sets current_char_ to '\0' if end of file is reached.
+ * load_file
  *
  * @param void
  * @return void
+ * Reads the entire file into memory and initializes the iterator position
+ * to the beginning of the content.
+ *
+ * @throws std::runtime_error If the file cannot be opened
  */
-void IO::load_next() noexcept {
-    if (file_stream_.get(current_char_)) {
-        return;
+void IO::load_file() {
+    std::ifstream file_stream(filename_, std::ios::binary);
+    if (!file_stream.is_open()) {
+        throw std::runtime_error("Failed to open file: " +
+                                 std::string(filename_));
     }
-    current_char_ = '\0';
+
+    std::stringstream buffer;
+    buffer << file_stream.rdbuf();
+    content_ = buffer.str();
+    current_pos_ = content_.begin();
 }
-
-/**
- * next
- *
- * Advances to the next character in the stream
- *
- * @param void
- * @return void
- */
-void IO::next() noexcept { load_next(); }
-
 /**
  * reset
  *
- * Resets the file stream to the beginning of the file and loads the first
- * character
- *
  * @param void
  * @return void
+ * Resets the iterator position to the beginning of the content
  */
-void IO::reset() noexcept {
-    file_stream_.clear();
-    file_stream_.seekg(0, std::ios::beg);
-    load_next();
-}
+void IO::reset() noexcept { current_pos_ = content_.begin(); }
 
 /**
  * close
  *
- * Closes the file stream if it is currently open
- *
  * @param void
  * @return void
+ * Clears the content and resets the iterator position
  */
 void IO::close() noexcept {
-    if (file_stream_.is_open()) {
-        file_stream_.close();
-    }
+    content_.clear();
+    current_pos_ = content_.end();
 }
 
 /**
  * to_string
  *
- * Reads up to n characters from the current stream position into a string.
- * Reading stops if either n characters have been read or end of file is
- * reached.
+ * Returns a string containing up to n characters from the current position,
+ * advancing the iterator to after the last character read
  *
  * @param n The maximum number of characters to read
  * @return std::string containing the read characters
  */
 std::string IO::to_string(std::size_t n) {
-    std::string result;
-    result.reserve(n);
-    while (n > 0 && !eof()) {
-        result += current_char_;
-        next();
-        --n;
-    }
+    if (eof())
+        return {};
+
+    auto end_pos = current_pos_;
+    std::size_t chars_left = std::distance(current_pos_, content_.end());
+    std::size_t chars_to_read = std::min(n, chars_left);
+
+    std::advance(end_pos, chars_to_read);
+    std::string result(current_pos_, end_pos);
+    current_pos_ = end_pos;
+
     return result;
 }
 
 /**
  * set
  *
- * Closes the current file (if any) and opens a new file for reading
+ * Clears current content and loads a new file into memory
  *
- * @param filename The path to the new file to open
+ * @param filename The path to the new file to load
  * @throws std::runtime_error If the new file cannot be opened
- * @return void
  */
 void IO::set(std::string_view filename) {
     close();
     filename_ = filename;
-    file_stream_.open(filename_, std::ios::binary);
-    if (!file_stream_.is_open()) {
-        throw std::runtime_error("Failed to open file: " +
-                                 std::string(filename));
-    }
-    load_next();
+    load_file();
 }
 
 /**
  * seek
  *
- * Repositions the file stream pointer to the specified offset
+ * Repositions the iterator to the specified offset from the given position
  *
- * @param offset The number of bytes to offset from whence
- * @param whence The reference position for the offset (beginning, current, or
- * end)
- * @return void
+ * @param offset The number of positions to move the iterator
+ * @param whence The reference position (beginning, current, or end)
+ *
+ * Iterator bounds are automatically enforced - attempting to seek before
+ * begin() will position at begin(), and seeking past end() will position
+ * at end()
  */
 void IO::seek(long offset, std::ios_base::seekdir whence) {
-    file_stream_.clear();
-    file_stream_.seekg(offset, whence);
-    load_next();
+    switch (whence) {
+        case std::ios::beg:
+            current_pos_ = content_.begin();
+            std::advance(current_pos_, offset);
+            break;
+        case std::ios::cur:
+            std::advance(current_pos_, offset);
+            break;
+        case std::ios::end:
+            current_pos_ = content_.end();
+            std::advance(current_pos_, -offset);
+            break;
+        default:
+            throw std::invalid_argument("Invalid seek direction");
+    }
+
+    // Bounds checking
+    if (current_pos_ < content_.begin()) {
+        current_pos_ = content_.begin();
+    } else if (current_pos_ > content_.end()) {
+        current_pos_ = content_.end();
+    }
 }

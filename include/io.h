@@ -5,22 +5,50 @@
 
 class IO {
     public:
+        using iterator = std::string::iterator;
+        using const_iterator = std::string::const_iterator;
+
         explicit IO(std::string_view filename); // Can throw
         ~IO() noexcept;
 
-        // Basic operations
-        [[nodiscard]] constexpr char current() const noexcept {
-            return current_char_;
+        // Iterator operations
+        [[nodiscard]] iterator begin() noexcept { return content_.begin(); }
+        [[nodiscard]] iterator end() noexcept { return content_.end(); }
+        [[nodiscard]] const_iterator begin() const noexcept {
+            return content_.begin();
         }
-        void next() noexcept;
-        [[nodiscard]] constexpr bool eof() const noexcept {
-            return current_char_ == '\0' || file_stream_.eof();
+        [[nodiscard]] const_iterator end() const noexcept {
+            return content_.end();
+        }
+
+        // Get current position
+        [[nodiscard]] iterator position() noexcept { return current_pos_; }
+        [[nodiscard]] const_iterator position() const noexcept {
+            return current_pos_;
+        }
+
+        // Basic operations
+        [[nodiscard]] char current() const noexcept {
+            return current_pos_ != content_.end() ? *current_pos_ : 0;
+        }
+        iterator next() noexcept {
+            if (current_pos_ != content_.end()) {
+                return ++current_pos_;
+            }
+            return current_pos_;
+        }
+        [[nodiscard]] bool eof() const noexcept {
+            return current_pos_ == content_.end();
         }
 
         // Peek operations
-        [[nodiscard]] char peek() noexcept {
-            int next = file_stream_.peek();
-            return next != EOF ? static_cast<char>(next) : '\0';
+        [[nodiscard]] char peek() const noexcept {
+            auto next_pos = current_pos_;
+            if (next_pos != content_.end() &&
+                std::next(next_pos) != content_.end()) {
+                return *std::next(next_pos);
+            }
+            return 0;
         }
 
         // File operations
@@ -32,24 +60,23 @@ class IO {
         void close() noexcept;
 
         // State queries
-        [[nodiscard]] constexpr bool has_next_token() const noexcept {
-            return !eof() && current_char_ != '\0';
-        }
+        [[nodiscard]] bool has_next_token() const noexcept { return !eof(); }
 
-        [[nodiscard]] constexpr bool is_at_keyword() const noexcept {
-            return (current_char_ >= 'A' && current_char_ <= 'Z');
+        [[nodiscard]] bool is_at_keyword() const noexcept {
+            return current() >= 'A' && current() <= 'Z';
         }
 
         // Access to file info
-        [[nodiscard]] constexpr std::string_view file() const noexcept {
+        [[nodiscard]] std::string_view file() const noexcept {
             return filename_;
         }
 
     private:
-        void load_next() noexcept;
+        // Loads entire file into content_
+        void load_file();
         std::string filename_;
-        std::ifstream file_stream_;
-        char current_char_;
+        std::string content_;
+        iterator current_pos_;
 
         IO(const IO&) = delete;
         IO& operator=(const IO&) = delete;
