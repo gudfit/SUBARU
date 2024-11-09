@@ -5,18 +5,17 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
-class Tokenizer
-{
+class Tokenizer {
     public:
         // Constructor/Destructor
-        explicit Tokenizer(const std::string& source);
+        explicit Tokenizer(std::string_view source);
         ~Tokenizer();
 
-        enum class TokenType
-        {
+        enum class TokenType {
             ERROR = 1,
             EOF_TOKEN,
             NUMBER,
@@ -44,26 +43,32 @@ class Tokenizer
             EOL
         };
 
-        struct KeywordToken
-        {
+        struct KeywordToken {
                 std::string keyword;
                 TokenType token;
         };
 
         using TokenData = std::variant<std::monostate, std::string, int, char>;
 
-        // Token data access
-        int variable_num() const;
-        const std::string& get_string() const;
-        int get_num() const;
-        const TokenData& get_token_data() const;
-        std::string token_to_string(TokenType token) const;
+        // Token operations
+        TokenType current_token() const { return current_token_; }
+        void reset();
+        void reset(TokenType to);
+        bool finished() const;
+        void next_token();
 
         // Line detection
         bool is_line_number();
         char peek_char();
         void skip_char();
         void skip_to_eol();
+
+        // Token data access
+        std::string_view token_to_string(TokenType token) const;
+        const TokenData& get_token_data() const;
+        int variable_num() const;
+        std::string_view get_string() const;
+        int get_num() const;
 
     private:
         // Token parsing methods

@@ -1,8 +1,5 @@
 #include "../include/io.h"
-#include <iostream>
 #include <stdexcept>
-
-/******************************************************************************/
 
 /**
  * IO Constructor
@@ -10,13 +7,13 @@
  * @param filename The path to the file to be opened for reading
  * @throws std::runtime_error If the file cannot be opened
  */
-IO::IO(const std::string& filename)
+IO::IO(std::string_view filename)
   : filename_(filename)
-  , file_stream_(filename, std::ios::binary)
-  , current_char_('\0')
-{
+  , file_stream_(filename_, std::ios::binary)
+  , current_char_('\0') {
     if (!file_stream_.is_open()) {
-        throw std::runtime_error("Failed to open file: " + filename_);
+        throw std::runtime_error("Failed to open file: " +
+                                 std::string(filename));
     }
     load_next();
 }
@@ -24,12 +21,11 @@ IO::IO(const std::string& filename)
 /**
  * IO Destructor
  *
+ * @param void
+ * @return void
  * Ensures the file stream is properly closed when the object is destroyed
  */
-IO::~IO()
-{
-    close();
-}
+IO::~IO() noexcept { close(); }
 
 /**
  * load_next
@@ -40,14 +36,11 @@ IO::~IO()
  * @param void
  * @return void
  */
-void
-IO::load_next()
-{
+void IO::load_next() noexcept {
     if (file_stream_.get(current_char_)) {
-        // Successfully read character
-    } else {
-        current_char_ = '\0';
+        return;
     }
+    current_char_ = '\0';
 }
 
 /**
@@ -58,11 +51,7 @@ IO::load_next()
  * @param void
  * @return void
  */
-void
-IO::next()
-{
-    load_next();
-}
+void IO::next() noexcept { load_next(); }
 
 /**
  * reset
@@ -73,9 +62,7 @@ IO::next()
  * @param void
  * @return void
  */
-void
-IO::reset()
-{
+void IO::reset() noexcept {
     file_stream_.clear();
     file_stream_.seekg(0, std::ios::beg);
     load_next();
@@ -89,9 +76,7 @@ IO::reset()
  * @param void
  * @return void
  */
-void
-IO::close()
-{
+void IO::close() noexcept {
     if (file_stream_.is_open()) {
         file_stream_.close();
     }
@@ -100,23 +85,22 @@ IO::close()
 /**
  * to_string
  *
- * Copies up to n characters from the current stream position into the
- * destination buffer. Adds null terminator at the end of the copied string.
+ * Reads up to n characters from the current stream position into a string.
+ * Reading stops if either n characters have been read or end of file is
+ * reached.
  *
- * @param dest The destination buffer to copy characters into
- * @param n The maximum number of characters to copy
- * @return void
+ * @param n The maximum number of characters to read
+ * @return std::string containing the read characters
  */
-void
-IO::to_string(char* dest, std::size_t n)
-{
-    std::size_t i = 0;
+std::string IO::to_string(std::size_t n) {
+    std::string result;
+    result.reserve(n);
     while (n > 0 && !eof()) {
-        dest[i++] = current_char_;
+        result += current_char_;
         next();
         --n;
     }
-    dest[i] = '\0';
+    return result;
 }
 
 /**
@@ -128,14 +112,13 @@ IO::to_string(char* dest, std::size_t n)
  * @throws std::runtime_error If the new file cannot be opened
  * @return void
  */
-void
-IO::set(const std::string& filename)
-{
+void IO::set(std::string_view filename) {
     close();
     filename_ = filename;
     file_stream_.open(filename_, std::ios::binary);
     if (!file_stream_.is_open()) {
-        throw std::runtime_error("Failed to open file: " + filename_);
+        throw std::runtime_error("Failed to open file: " +
+                                 std::string(filename));
     }
     load_next();
 }
@@ -150,9 +133,7 @@ IO::set(const std::string& filename)
  * end)
  * @return void
  */
-void
-IO::seek(long offset, std::ios_base::seekdir whence)
-{
+void IO::seek(long offset, std::ios_base::seekdir whence) {
     file_stream_.clear();
     file_stream_.seekg(offset, whence);
     load_next();
