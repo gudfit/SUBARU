@@ -1,5 +1,5 @@
 #include "../include/io.h"
-#include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 /******************************************************************************/
@@ -7,153 +7,135 @@
 /**
  * IO Constructor
  *
- * @param filename The path to the file to be opened for reading
+ * @param filename The path to the file to be opened and loaded into memory
  * @throws std::runtime_error If the file cannot be opened
  */
-IO::IO(const std::string& filename)
-  : filename_(filename)
-  , file_stream_(filename, std::ios::binary)
-  , current_char_('\0')
-{
-    if (!file_stream_.is_open()) {
-        throw std::runtime_error("Failed to open file: " + filename_);
-    }
-    load_next();
+IO::IO(std::string_view filename)
+  : filename_(filename) {
+    load_file();
 }
 
 /**
  * IO Destructor
  *
- * Ensures the file stream is properly closed when the object is destroyed
+ * Ensures resources are properly cleaned up when the object is destroyed
  */
-IO::~IO()
-{
-    close();
-}
+IO::~IO() noexcept { close(); }
 
 /**
- * load_next
- *
- * Internal helper function to load the next character from the file stream.
- * Sets current_char_ to '\0' if end of file is reached.
+ * load_file
  *
  * @param void
  * @return void
+ * Reads the entire file into memory and initializes the iterator position
+ * to the beginning of the content.
+ *
+ * @throws std::runtime_error If the file cannot be opened
  */
-void
-IO::load_next()
-{
-    if (file_stream_.get(current_char_)) {
-        // Successfully read character
-    } else {
-        current_char_ = '\0';
+void IO::load_file() {
+    std::ifstream file_stream(filename_, std::ios::binary);
+    if (!file_stream.is_open()) {
+        throw std::runtime_error("Failed to open file: " +
+                                 std::string(filename_));
     }
-}
 
-/**
- * next
- *
- * Advances to the next character in the stream
- *
- * @param void
- * @return void
- */
-void
-IO::next()
-{
-    load_next();
+    std::stringstream buffer;
+    buffer << file_stream.rdbuf();
+    content_ = buffer.str();
+    current_pos_ = content_.begin();
 }
-
 /**
  * reset
  *
- * Resets the file stream to the beginning of the file and loads the first
- * character
- *
  * @param void
  * @return void
+ * Resets the iterator position to the beginning of the content
  */
-void
-IO::reset()
-{
-    file_stream_.clear();
-    file_stream_.seekg(0, std::ios::beg);
-    load_next();
-}
+void IO::reset() noexcept { current_pos_ = content_.begin(); }
 
 /**
  * close
  *
- * Closes the file stream if it is currently open
- *
  * @param void
  * @return void
+ * Clears the content and resets the iterator position
  */
-void
-IO::close()
-{
-    if (file_stream_.is_open()) {
-        file_stream_.close();
-    }
+void IO::close() noexcept {
+    content_.clear();
+    current_pos_ = content_.end();
 }
 
 /**
  * to_string
  *
- * Copies up to n characters from the current stream position into the
- * destination buffer. Adds null terminator at the end of the copied string.
+ * Returns a string containing up to n characters from the current position,
+ * advancing the iterator to after the last character read
  *
- * @param dest The destination buffer to copy characters into
- * @param n The maximum number of characters to copy
- * @return void
+ * @param n The maximum number of characters to read
+ * @return std::string containing the read characters
  */
-void
-IO::to_string(char* dest, std::size_t n)
-{
-    std::size_t i = 0;
-    while (n > 0 && !eof()) {
-        dest[i++] = current_char_;
-        next();
-        --n;
-    }
-    dest[i] = '\0';
+std::string IO::to_string(std::size_t n) {
+    if (eof())
+        return {};
+
+    auto end_pos = current_pos_;
+    std::size_t chars_left = std::distance(current_pos_, content_.end());
+    std::size_t chars_to_read = std::min(n, chars_left);
+
+    std::advance(end_pos, chars_to_read);
+    std::string result(current_pos_, end_pos);
+    current_pos_ = end_pos;
+
+    return result;
 }
 
 /**
  * set
  *
- * Closes the current file (if any) and opens a new file for reading
+ * Clears current content and loads a new file into memory
  *
- * @param filename The path to the new file to open
+ * @param filename The path to the new file to load
  * @throws std::runtime_error If the new file cannot be opened
- * @return void
  */
-void
-IO::set(const std::string& filename)
-{
+void IO::set(std::string_view filename) {
     close();
     filename_ = filename;
-    file_stream_.open(filename_, std::ios::binary);
-    if (!file_stream_.is_open()) {
-        throw std::runtime_error("Failed to open file: " + filename_);
-    }
-    load_next();
+    load_file();
 }
 
 /**
  * seek
  *
- * Repositions the file stream pointer to the specified offset
+ * Repositions the iterator to the specified offset from the given position
  *
- * @param offset The number of bytes to offset from whence
- * @param whence The reference position for the offset (beginning, current, or
- * end)
- * @return void
+ * @param offset The number of positions to move the iterator
+ * @param whence The reference position (beginning, current, or end)
+ *
+ * Iterator bounds are automatically enforced - attempting to seek before
+ * begin() will position at begin(), and seeking past end() will position
+ * at end()
  */
-void
-IO::seek(long offset, std::ios_base::seekdir whence)
-{
-    file_stream_.clear();
-    file_stream_.seekg(offset, whence);
-    load_next();
+void IO::seek(long offset, std::ios_base::seekdir whence) {
+    switch (whence) {
+        case std::ios::beg:
+            current_pos_ = content_.begin();
+            std::advance(current_pos_, offset);
+            break;
+        case std::ios::cur:
+            std::advance(current_pos_, offset);
+            break;
+        case std::ios::end:
+            current_pos_ = content_.end();
+            std::advance(current_pos_, -offset);
+            break;
+        default:
+            throw std::invalid_argument("Invalid seek direction");
+    }
+
+    // Bounds checking
+    if (current_pos_ < content_.begin()) {
+        current_pos_ = content_.begin();
+    } else if (current_pos_ > content_.end()) {
+        current_pos_ = content_.end();
+    }
 }
