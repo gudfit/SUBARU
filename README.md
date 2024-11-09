@@ -51,6 +51,6 @@ This implementation of VVTBI, while perhaps not the most efficient tokenization 
 - Error handling
 - File I/O
 
-Sometimes the longer path teaches us more than the shortcut. 😊
+Sometimes the longer path teaches us more than the shortcut.
 
 For questions or feedback: `nnamdidaniel114[at]gmail.com`
