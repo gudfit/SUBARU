@@ -28,6 +28,7 @@ class IO {
         }
 
         // Basic operations
+        int peek();
         [[nodiscard]] char current() const noexcept {
             return current_pos_ != content_.end() ? *current_pos_ : 0;
         }

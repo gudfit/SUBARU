@@ -6,16 +6,17 @@ OBJDIR     = obj
 TESTDIR    = tests/unit
 TEST_OBJDIR = $(OBJDIR)/test
 CXXFLAGS   = -Wall -Werror -O2 -Wextra -pedantic -std=c++20 -DNDEBUG
+DEBUGFLAGS = -DDEBUG_MODE
 #############################################################
 #### DO NOT EDIT BELOW THIS LINE ############################
 VERSION    = 3.0
-SOURCES    = io.cc tokenizer.cc vvtbi.cc main.cc
+SOURCES    = io.cc tokenizer.cc 
 OBJS       = $(SOURCES:%.cc=$(OBJDIR)/%.o)
 
 # Test related variables
-TEST_SOURCES = io_test.cc tokenizer_test.cc
+TEST_SOURCES = io_test.cc tokenizer_test.cc 
 TEST_OBJS    = $(TEST_SOURCES:%.cc=$(TEST_OBJDIR)/%.o)
-TEST_DEPS    = $(TEST_OBJDIR)/io.o $(TEST_OBJDIR)/tokenizer.o
+TEST_DEPS    = $(TEST_OBJDIR)/io.o $(TEST_OBJDIR)/tokenizer.o 
 TEST_TARGET  = run_tests
 
 # Create object directories if they don't exist
@@ -40,6 +41,12 @@ $(NAME): $(OBJS)
 $(OBJDIR)/%.o: $(SRCDIR)/%.cc
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
+# Debug build target
+debug: CXXFLAGS += $(DEBUGFLAGS)
+debug: clean $(OBJS)
+	@$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)_debug
+	@echo "Debug build completed."
+
 # Test object files
 $(TEST_OBJDIR)/%.o: $(TESTDIR)/%.cc
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -56,13 +63,18 @@ $(TEST_TARGET): $(TEST_OBJS) $(TEST_DEPS)
 	@$(CXX) $(CXXFLAGS) $^ -o $@ -lCatch2Main -lCatch2
 	@echo "Test binary compiled successfully!"
 
-.PHONY: clean test
-clean:
-	@rm -rf $(OBJDIR) $(NAME) $(TEST_TARGET)
-
+# Test target without debug logs
 test: $(TEST_TARGET)
 	@./$(TEST_TARGET)
 
-.PHONY: all
+# Test target with debug logs
+test_debug: CXXFLAGS += $(DEBUGFLAGS)
+test_debug: $(TEST_TARGET)
+	@./$(TEST_TARGET)
+
+.PHONY: clean test test_debug debug all
+clean:
+	@rm -rf $(OBJDIR) $(NAME) $(NAME)_debug $(TEST_TARGET)
+
 all: clean $(NAME)
 #############################################################
