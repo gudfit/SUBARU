@@ -150,10 +150,10 @@ void IO::seek(long offset, std::ios_base::seekdir whence) {
  * @return char
  */
 
-char IO::peek() {
+int IO::peek() { // Changed return type to int
     if (current_pos_ != content_.end()) {
-        return *current_pos_;
+        return static_cast<unsigned char>(*current_pos_);
     } else {
-        return '\0'; // Return null character at EOF
+        return EOF;
     }
 }
