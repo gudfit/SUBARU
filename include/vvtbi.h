@@ -4,36 +4,32 @@
 #include "tokenizer.h"
 #include <memory>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 
 class VVTBI {
     public:
-        explicit VVTBI(std::string_view source);
+        explicit VVTBI(const std::string& source);
         ~VVTBI();
 
-        // Delete copy operations
-        VVTBI(const VVTBI&) = delete;
-        VVTBI& operator=(const VVTBI&) = delete;
-
         void run();
-        [[nodiscard]] std::string_view get_token_string(
-          Tokenizer::TokenType token) const;
-        [[nodiscard]] bool finished() const noexcept {
-            return execution_finished_;
-        }
+        std::string get_token_string(Tokenizer::TokenType token) const;
+        bool finished() const;
+
+        void log_found_line_numbers(
+          const std::unordered_map<int, bool>& found_lines);
+        void log_available_lines(int target_line);
 
     private:
-        enum class ErrorCode { Error = 1, Warning };
-
-        // Parser methods
+        // Token processing
         void accept(Tokenizer::TokenType expectedToken);
-        [[nodiscard]] int expression();
-        [[nodiscard]] int term();
-        [[nodiscard]] int factor();
-        [[nodiscard]] int relation();
 
-        // Statement handlers
+        // Expression parsing
+        int expression();
+        int term();
+        int factor();
+        int relation();
+
+        // Statement handling
         void statement();
         void line_statement();
         void let_statement();
@@ -41,20 +37,26 @@ class VVTBI {
         void goto_statement();
         void print_statement();
 
-        // Line number and control flow
+        // Line number management
         void find_linenum(int linenum);
         void jump_linenum(int linenum);
         void build_line_map();
 
-        // Utilities
-        void dprintf(std::string_view message, ErrorCode errorCode);
-        [[nodiscard]] int safe_divide(int numerator, int denominator) noexcept;
+        // Aids
+        bool is_valid_line_number(int num) const;
+        bool is_line_number() const;
+        bool is_statement_end(Tokenizer::TokenType token) const;
 
-        // State
+        // Error handling
+        enum ErrorCode { E_ERROR = 1, E_WARNING };
+        void dprintf(const std::string& message, int errorCode);
+        int safe_divide(int numerator, int denominator);
+
+        // Member variables
         std::unique_ptr<Tokenizer> tokenizer_;
         std::unordered_map<char, int> variables_;
-        std::unordered_map<int, std::streampos> line_positions_;
-        bool execution_finished_{ false };
-        bool skip_to_line_{ false };
-        int target_line_{ 0 };
+        std::unordered_map<int, bool> line_positions_;
+        bool execution_finished_;
+        bool skip_to_line_;
+        int target_line_;
 };
