@@ -422,26 +422,12 @@ void VVTBI::if_statement() {
                     E_ERROR);
             return;
         }
-        // Reset tokenizer to beginning
-        tokenizer_->reset();
 
-        // Skip until we find the target line
-        while (!tokenizer_->finished()) {
-            if (tokenizer_->current_token() == Tokenizer::TokenType::NUMBER) {
-                if (tokenizer_->get_num() == line_number) {
-                    // Found our line, skip past the line number
-                    tokenizer_->next_token();
-                    return;
-                }
-            }
-            // Skip current line
-            while (tokenizer_->current_token() != Tokenizer::TokenType::EOL &&
-                   !tokenizer_->finished()) {
-                tokenizer_->next_token();
-            }
-            if (tokenizer_->current_token() == Tokenizer::TokenType::EOL) {
-                tokenizer_->next_token();
-            }
+        tokenizer_->reset();
+        if (!find_target_line(line_number)) {
+            dprintf("Internal Error: Failed to find valid line number " +
+                      std::to_string(line_number),
+                    E_ERROR);
         }
     } else {
         // If condition is false, continue to next statement
@@ -469,27 +455,40 @@ void VVTBI::goto_statement() {
         return;
     }
 
-    // Reset tokenizer to beginning
     tokenizer_->reset();
+    if (!find_target_line(line_number)) {
+        dprintf("Internal Error: Failed to find valid line number " +
+                  std::to_string(line_number),
+                E_ERROR);
+    }
+}
 
-    // Skip until we find the target line
+/**
+ * Skips through the code until finding a specific line number.
+ * Assumes tokenizer has been reset to beginning.
+ *
+ * @param line_number The target line number to find
+ * @return bool True if line was found, false if reached end without finding
+ */
+bool VVTBI::find_target_line(int line_number) {
     while (!tokenizer_->finished()) {
-        if (tokenizer_->current_token() == Tokenizer::TokenType::NUMBER) {
-            if (tokenizer_->get_num() == line_number) {
-                // Found our line, skip past the line number
-                tokenizer_->next_token();
-                return;
-            }
+        if (tokenizer_->current_token() == Tokenizer::TokenType::NUMBER &&
+            tokenizer_->get_num() == line_number) {
+            tokenizer_->next_token(); // Skip past the line number
+            return true;
         }
-        // Skip current line
-        while (tokenizer_->current_token() != Tokenizer::TokenType::EOL &&
-               !tokenizer_->finished()) {
+
+        // Skip to end of current line
+        while (!tokenizer_->finished() &&
+               tokenizer_->current_token() != Tokenizer::TokenType::EOL) {
             tokenizer_->next_token();
         }
+
         if (tokenizer_->current_token() == Tokenizer::TokenType::EOL) {
             tokenizer_->next_token();
         }
     }
+    return false;
 }
 
 /**

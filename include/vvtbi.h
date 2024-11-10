@@ -42,6 +42,7 @@ class VVTBI {
         void find_linenum(int linenum);
         void jump_linenum(int linenum);
         void build_line_map();
+        bool find_target_line(int line_number);
 
         // Aids
         bool is_valid_line_number(int num) const;
