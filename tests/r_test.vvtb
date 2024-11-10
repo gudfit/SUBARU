@@ -1,2 +1,2 @@
-10 LET A = 5
-20 PRINT A
+10 LET a = 5
+20 PRINT a
