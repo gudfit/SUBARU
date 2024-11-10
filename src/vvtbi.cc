@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <iostream>
 #include <stdexcept>
+#include <string_view>
 
 /**
  * Constructs a new VVTBI object and initialize with the given source file.
@@ -13,7 +14,7 @@
  * @param source The source code file.
  * @throws std::runtime_error if tokenizer initialization fails
  */
-VVTBI::VVTBI(const std::string& source)
+VVTBI::VVTBI(std::string_view source)
   : tokenizer_(std::make_unique<Tokenizer>(source))
   , execution_finished_(false)
   , skip_to_line_(false)
@@ -30,15 +31,13 @@ VVTBI::VVTBI(const std::string& source)
 }
 
 /**
- * Destructor - unique_ptr handles tokenizer cleanup automatically
- */
-VVTBI::~VVTBI() = default;
-
-/**
  * Runs the VVTBI interpreter.
  */
 void VVTBI::run() {
     DEBUG_LOG("Starting program execution");
+
+    // Build line map at start
+    build_line_map();
 
     while (!finished()) {
         if (tokenizer_->finished()) {
@@ -46,9 +45,7 @@ void VVTBI::run() {
             break;
         }
 
-        if (!skip_to_line_) {
-            line_statement();
-        } else {
+        if (skip_to_line_) {
             // We're looking for a specific line
             auto token = tokenizer_->current_token();
             if (token == Tokenizer::TokenType::NUMBER) {
@@ -56,7 +53,8 @@ void VVTBI::run() {
                 if (current_line == target_line_) {
                     skip_to_line_ = false;
                     target_line_ = -1;
-                    line_statement();
+                    tokenizer_->next_token(); // Move past the line number
+                    statement();
                 } else {
                     // Skip to next line
                     while (tokenizer_->current_token() !=
@@ -80,6 +78,8 @@ void VVTBI::run() {
                     tokenizer_->next_token();
                 }
             }
+        } else {
+            line_statement();
         }
     }
     DEBUG_LOG("Program execution finished");
@@ -398,14 +398,12 @@ void VVTBI::let_statement() {
  *
  * @throws std::runtime_error on syntax errors
  */
+
 void VVTBI::if_statement() {
     DEBUG_LOG("Processing IF statement");
-
     accept(Tokenizer::TokenType::IF);
-
     int condition = relation();
     DEBUG_LOG("Condition result: " << condition);
-
     accept(Tokenizer::TokenType::THEN);
 
     if (tokenizer_->current_token() != Tokenizer::TokenType::NUMBER) {
@@ -418,13 +416,38 @@ void VVTBI::if_statement() {
 
     if (condition) {
         DEBUG_LOG("Condition true, jumping to line " << line_number);
-        jump_linenum(line_number);
-        return; // Skip rest of current line
-    }
+        if (line_positions_.find(line_number) == line_positions_.end()) {
+            dprintf("Runtime Error: Line number " +
+                      std::to_string(line_number) + " not found",
+                    E_ERROR);
+            return;
+        }
+        // Reset tokenizer to beginning
+        tokenizer_->reset();
 
-    // If condition is false, continue to next statement
-    if (tokenizer_->current_token() == Tokenizer::TokenType::EOL) {
-        tokenizer_->next_token();
+        // Skip until we find the target line
+        while (!tokenizer_->finished()) {
+            if (tokenizer_->current_token() == Tokenizer::TokenType::NUMBER) {
+                if (tokenizer_->get_num() == line_number) {
+                    // Found our line, skip past the line number
+                    tokenizer_->next_token();
+                    return;
+                }
+            }
+            // Skip current line
+            while (tokenizer_->current_token() != Tokenizer::TokenType::EOL &&
+                   !tokenizer_->finished()) {
+                tokenizer_->next_token();
+            }
+            if (tokenizer_->current_token() == Tokenizer::TokenType::EOL) {
+                tokenizer_->next_token();
+            }
+        }
+    } else {
+        // If condition is false, continue to next statement
+        if (tokenizer_->current_token() == Tokenizer::TokenType::EOL) {
+            tokenizer_->next_token();
+        }
     }
 }
 
@@ -432,12 +455,41 @@ void VVTBI::if_statement() {
  * Executes a GOTO statement.
  * Format: GOTO line_number
  */
+
 void VVTBI::goto_statement() {
     accept(Tokenizer::TokenType::GOTO);
     int line_number = tokenizer_->get_num();
     accept(Tokenizer::TokenType::NUMBER);
     accept(Tokenizer::TokenType::EOL);
-    jump_linenum(line_number);
+
+    if (line_positions_.find(line_number) == line_positions_.end()) {
+        dprintf("Runtime Error: Line number " + std::to_string(line_number) +
+                  " not found",
+                E_ERROR);
+        return;
+    }
+
+    // Reset tokenizer to beginning
+    tokenizer_->reset();
+
+    // Skip until we find the target line
+    while (!tokenizer_->finished()) {
+        if (tokenizer_->current_token() == Tokenizer::TokenType::NUMBER) {
+            if (tokenizer_->get_num() == line_number) {
+                // Found our line, skip past the line number
+                tokenizer_->next_token();
+                return;
+            }
+        }
+        // Skip current line
+        while (tokenizer_->current_token() != Tokenizer::TokenType::EOL &&
+               !tokenizer_->finished()) {
+            tokenizer_->next_token();
+        }
+        if (tokenizer_->current_token() == Tokenizer::TokenType::EOL) {
+            tokenizer_->next_token();
+        }
+    }
 }
 
 /**
@@ -447,23 +499,18 @@ void VVTBI::goto_statement() {
 void VVTBI::print_statement() {
     DEBUG_LOG("Entering print_statement");
     accept(Tokenizer::TokenType::PRINT);
-
     bool need_space = false;
-
     while (!tokenizer_->finished()) {
         auto token = tokenizer_->current_token();
         DEBUG_LOG("Print token: " << get_token_string(token));
-
         // Check for statement end
         if (is_statement_end(token)) {
             break;
         }
-
         // Check for line number
         if (is_line_number()) {
             break;
         }
-
         // Process print items
         switch (token) {
             case Tokenizer::TokenType::STRING:
@@ -474,12 +521,11 @@ void VVTBI::print_statement() {
                 need_space = true;
                 tokenizer_->next_token();
                 break;
-
             case Tokenizer::TokenType::SEPARATOR:
-                need_space = false;
+                need_space = false; // Reset need_space since we're using comma
+                std::cout << " ";   // Single space after the previous item
                 tokenizer_->next_token();
                 break;
-
             case Tokenizer::TokenType::LETTER:
             case Tokenizer::TokenType::NUMBER:
             case Tokenizer::TokenType::LEFT_PAREN:
@@ -492,15 +538,13 @@ void VVTBI::print_statement() {
             default:
                 DEBUG_LOG(
                   "Found unexpected token: " << get_token_string(token));
-                goto end_print; // Exit both switch and while
+                goto end_print;
         }
     }
 end_print:
     std::cout << std::endl;
-
     auto final_token = tokenizer_->current_token();
     DEBUG_LOG("End of print, final token: " << get_token_string(final_token));
-
     if (is_line_number()) {
         DEBUG_LOG("Stopping at line number: " << tokenizer_->get_num());
         return;
@@ -582,6 +626,7 @@ void VVTBI::statement() {
  * Parses and executes a line statement.
  * Handles line numbers and statement execution.
  */
+
 void VVTBI::line_statement() {
     DEBUG_LOG("Starting line_statement");
     // Skip empty lines
@@ -593,16 +638,11 @@ void VVTBI::line_statement() {
         execution_finished_ = true;
         return;
     }
-    // Process line number if present
+
     if (tokenizer_->current_token() == Tokenizer::TokenType::NUMBER) {
-#ifdef DEBUG_MODE
-        int line_num = tokenizer_->get_num();
-        DEBUG_LOG("Processing line number: " << line_num);
-#else
-        tokenizer_->get_num(); // Consume line number
-#endif
-        tokenizer_->next_token();
+        tokenizer_->next_token(); // Move past line number
     }
+
     statement();
 }
 
@@ -659,6 +699,7 @@ void VVTBI::log_found_line_numbers(
  * @param linenum The line number to find
  * @throws std::runtime_error if line number not found
  */
+
 void VVTBI::find_linenum(int linenum) {
     DEBUG_LOG("Searching for line number: " << linenum);
 
@@ -669,38 +710,15 @@ void VVTBI::find_linenum(int linenum) {
 
     // Check if line exists in map
     if (line_positions_.find(linenum) == line_positions_.end()) {
-#ifdef DEBUG_MODE
-        log_available_lines(linenum);
-#endif
-
         std::string error = "Runtime Error: Line number " +
                             std::to_string(linenum) + " not found";
         dprintf(error, E_ERROR);
         return;
     }
-    // Search for the line
-    tokenizer_->reset();
-    while (!tokenizer_->finished()) {
-        auto token = tokenizer_->current_token();
-        DEBUG_LOG("Search - current token: " << get_token_string(token));
 
-        if (token == Tokenizer::TokenType::NUMBER) {
-            int current_line = tokenizer_->get_num();
-            DEBUG_LOG("Found line " << current_line);
-
-            if (current_line == linenum) {
-                tokenizer_->next_token();
-                DEBUG_LOG("Positioned at target line "
-                          << linenum << ", next token is: "
-                          << get_token_string(tokenizer_->current_token()));
-                return;
-            }
-        }
-        tokenizer_->next_token();
-    }
-    // Should never reach here since we checked the map
-    DEBUG_LOG("Internal error - failed to position at line " << linenum);
-    dprintf("Internal Error: Line positioning failure", E_ERROR);
+    // Set up skip mode
+    skip_to_line_ = true;
+    target_line_ = linenum;
 }
 
 /**
@@ -711,9 +729,30 @@ void VVTBI::find_linenum(int linenum) {
  */
 void VVTBI::jump_linenum(int linenum) {
     DEBUG_LOG("Attempting to jump to line " << linenum);
-    skip_to_line_ = true;
-    target_line_ = linenum;
-    find_linenum(linenum);
+    if (line_positions_.empty()) {
+        build_line_map();
+    }
+
+    // Reset tokenizer to start
+    tokenizer_->reset();
+
+    // Search for target line
+    while (!tokenizer_->finished()) {
+        auto token = tokenizer_->current_token();
+        if (token == Tokenizer::TokenType::NUMBER) {
+            int current_line = tokenizer_->get_num();
+            if (current_line == linenum) {
+                tokenizer_->next_token(); // Move past the line number
+                return;                   // Found our line, ready to execute
+            }
+        }
+        tokenizer_->next_token();
+    }
+
+    // If we get here, line wasn't found
+    std::string error =
+      "Runtime Error: Line number " + std::to_string(linenum) + " not found";
+    dprintf(error, E_ERROR);
 }
 
 #ifdef DEBUG_MODE

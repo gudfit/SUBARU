@@ -4,12 +4,13 @@
 #include "tokenizer.h"
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 
 class VVTBI {
     public:
-        explicit VVTBI(const std::string& source);
-        ~VVTBI();
+        explicit VVTBI(std::string_view source);
+        ~VVTBI() = default;
 
         void run();
         std::string get_token_string(Tokenizer::TokenType token) const;

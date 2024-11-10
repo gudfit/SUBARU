@@ -14,7 +14,7 @@ SOURCES    = io.cc tokenizer.cc vvtbi.cc main.cc
 OBJS       = $(SOURCES:%.cc=$(OBJDIR)/%.o)
 
 # Test related variables
-TEST_SOURCES = io_test.cc tokenizer_test.cc 
+TEST_SOURCES = io_test.cc tokenizer_test.cc vvtbi_test.cc
 TEST_OBJS    = $(TEST_SOURCES:%.cc=$(TEST_OBJDIR)/%.o)
 TEST_DEPS    = $(TEST_OBJDIR)/io.o $(TEST_OBJDIR)/tokenizer.o $(TEST_OBJDIR)/vvtbi.o
 TEST_TARGET  = run_tests
