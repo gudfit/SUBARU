@@ -25,12 +25,12 @@ make test_debug # So you really dont trust the compiler huh
 ## 📜 Ancient Scroll Example
 
 ```basic
-REM As witnessed by Rem in the Roswaal Mansion
-10 LET mana = 5
-20 PRINT "Subaru's current mana level: ", mana
-30 IF mana > 3 THEN 50
-40 PRINT "Return by De... [Message corrupted]"
-50 PRINT "Rem believes in Subaru-kun!"
+10 REM As witnessed by rem in the Roswaal Mansion
+20 LET m = 5
+30 PRINT "Subaru's current mana level: ", m
+40 IF m > 3 THEN 50
+50 PRINT "Return by De... [Message corrupted]"
+60 PRINT "Rem believes in Subaru-kun!"
 ```
 
 ## ✨ Manifestation
