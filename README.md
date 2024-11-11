@@ -30,6 +30,12 @@ REM This is a sample VVTB program
 50 PRINT "Done!"
 ```
 
+## Results
+
+Here's the interpreter in action:
+
+![VVTBI Execution Example](Images/image.png)
+
 ## License
 
 This software is released under the Apache License, Version 2.0.
