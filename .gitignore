@@ -4,6 +4,7 @@ obj/
 
 # Ignore the executable
 vvtbi
+subaruu
 run_tests
 
 # IDE
