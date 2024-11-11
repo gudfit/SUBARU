@@ -10,18 +10,14 @@ DEBUGFLAGS = -DDEBUG_MODE
 #############################################################
 #### DO NOT EDIT BELOW THIS LINE ############################
 VERSION    = 3.0
-SOURCES    = io.cc tokenizer.cc 
+SOURCES    = io.cc tokenizer.cc vvtbi.cc main.cc
 OBJS       = $(SOURCES:%.cc=$(OBJDIR)/%.o)
 
 # Test related variables
-TEST_SOURCES = io_test.cc tokenizer_test.cc 
+TEST_SOURCES = io_test.cc tokenizer_test.cc vvtbi_test.cc
 TEST_OBJS    = $(TEST_SOURCES:%.cc=$(TEST_OBJDIR)/%.o)
-TEST_DEPS    = $(TEST_OBJDIR)/io.o $(TEST_OBJDIR)/tokenizer.o 
+TEST_DEPS    = $(TEST_OBJDIR)/io.o $(TEST_OBJDIR)/tokenizer.o $(TEST_OBJDIR)/vvtbi.o
 TEST_TARGET  = run_tests
-
-# Create object directories if they don't exist
-$(shell mkdir -p $(OBJDIR))
-$(shell mkdir -p $(TEST_OBJDIR))
 
 # Main target
 $(NAME): $(OBJS)
@@ -38,28 +34,41 @@ $(NAME): $(OBJS)
 	@echo "**************************************************"
 
 # Pattern rule for object files
-$(OBJDIR)/%.o: $(SRCDIR)/%.cc
+$(OBJDIR)/%.o: $(SRCDIR)/%.cc | $(OBJDIR)
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Rule to create the obj directory
+$(OBJDIR):
+	@mkdir -p $(OBJDIR)
 
 # Debug build target
 debug: CXXFLAGS += $(DEBUGFLAGS)
-debug: clean $(OBJS)
+debug: clean $(NAME)_debug
+
+$(NAME)_debug: $(OBJS)
 	@$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)_debug
 	@echo "Debug build completed."
 
 # Test object files
-$(TEST_OBJDIR)/%.o: $(TESTDIR)/%.cc
+$(TEST_OBJDIR)/%.o: $(TESTDIR)/%.cc | $(TEST_OBJDIR)
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Special rules for source files when building tests
-$(TEST_OBJDIR)/io.o: $(SRCDIR)/io.cc
+$(TEST_OBJDIR)/io.o: $(SRCDIR)/io.cc | $(TEST_OBJDIR)
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(TEST_OBJDIR)/tokenizer.o: $(SRCDIR)/tokenizer.cc
+$(TEST_OBJDIR)/tokenizer.o: $(SRCDIR)/tokenizer.cc | $(TEST_OBJDIR)
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(TEST_OBJDIR)/vvtbi.o: $(SRCDIR)/vvtbi.cc | $(TEST_OBJDIR)
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Rule to create the test_obj directory
+$(TEST_OBJDIR):
+	@mkdir -p $(TEST_OBJDIR)
 
 # Test target
-$(TEST_TARGET): $(TEST_OBJS) $(TEST_DEPS)
+$(TEST_TARGET): $(TEST_OBJS) $(TEST_DEPS) | $(TEST_TARGET)
 	@$(CXX) $(CXXFLAGS) $^ -o $@ -lCatch2Main -lCatch2
 	@echo "Test binary compiled successfully!"
 

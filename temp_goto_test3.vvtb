@@ -1,0 +1,3 @@
+10 LET a = 30
+20 GOTO a
+30 PRINT "Success"
