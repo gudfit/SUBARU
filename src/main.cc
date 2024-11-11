@@ -4,18 +4,18 @@
 #include <iostream>
 #include <string>
 
+#include "../include/subaruu.h"
 #include "../include/tokenizer.h"
-#include "../include/vvtbi.h"
 
-// VVTBI's version number.
+// SUBARU's version number.
 constexpr const char* VERSION = "2.0";
 
 // The message printed if no file is given.
 const std::string NOARGS = "VERSION: " + std::string(VERSION) +
                            "\n"
                            "***************************************\n"
-                           "  Howto: ./vvtbi [-debug] file." +
-                           std::string("vvtb") + "\n";
+                           "  Howto: ./subaru [-debug] file." +
+                           std::string("subaru") + "\n";
 
 /**
  * @brief Check if the filename has the valid extension.
@@ -28,7 +28,7 @@ bool valid(const std::string& filename) {
     if (pos == std::string::npos)
         return false;
     std::string ext = filename.substr(pos + 1);
-    return ext == "vvtb";
+    return ext == "subaru";
 }
 
 int main(int argc, char** argv) {
@@ -43,7 +43,8 @@ int main(int argc, char** argv) {
         } else {
             // Check if the file has a valid extension.
             if (!valid(argv[2])) {
-                std::cerr << "Invalid file extension. Expected a .vvtb file.\n";
+                std::cerr
+                  << "Invalid file extension. Expected a .subaru file.\n";
                 return EXIT_FAILURE;
             }
 
@@ -63,19 +64,19 @@ int main(int argc, char** argv) {
             }
         }
     }
-    // Run the VVTBI interpreter.
+    // Run the SUBARU interpreter.
     else {
         // Check if the file has a valid extension.
         if (!valid(argv[1])) {
-            std::cerr << "Invalid file extension. Expected a .vvtb file.\n";
+            std::cerr << "Invalid file extension. Expected a .subaru file.\n";
             return EXIT_FAILURE;
         }
 
         try {
-            VVTBI vvtbi(argv[1]);
-            vvtbi.run();
+            SUBARUU subaruu(argv[1]);
+            subaruu.run();
         } catch (const std::exception& e) {
-            std::cerr << "VVTBI Error: " << e.what() << "\n";
+            std::cerr << "SUBARUU Error: " << e.what() << "\n";
             return EXIT_FAILURE;
         }
     }

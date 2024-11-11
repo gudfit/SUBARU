@@ -1,56 +1,72 @@
-# VVTBI (Very, Very, Tiny, Basic Interpreter)
+# SUBARU (Spiritually Unbridled Basic Arithmetic Resolver Unit)
 
-A simple BASIC interpreter written in C++ that supports essential BASIC commands like PRINT, LET, IF/THEN, GOTO, and REM statements.
+_A mystic interpreter born from the Witch's blessing, capable of decoding cryptic messages through the ancient magic of BASIC-like commands._
 
-## Features
+## 🌟 Divine Blessings (Features)
 
-- Line number based statements
-- PRINT command with string and variable support
-- Variable assignments (LET statement)
-- Conditional branching (IF/THEN)
-- Comments (REM)
-- Simple arithmetic expressions
+- Numerical enchantments (line numbers) to maintain the flow of mana
+- PRINT incantations to manifest thoughts into reality
+- Variable binding magic (LET statements) to store ethereal values
+- Conditional spirit gates (IF/THEN) for diverging paths
+- Sacred inscriptions (REM) to document the arcane
+- Arithmetic crystallization for basic mathematical operations
 
-## Building and Running
+## 🗡️ Forging the Spell (Building and Running)
 
 ```bash
-make clean
-make
-./vvtbi your_program.vvtb
+make clean      # Cleanses previous builds
+make            # Manifests the interpreter
+make test       # Test its powers
+make debug      # Check if it is being truthful
+make test_debug # So you really dont trust the compiler huh
+./subaru your_spell.sub
 ```
 
-## Example Program
+## 📜 Ancient Scroll Example
 
 ```basic
-REM This is a sample VVTB program
-10 LET a = 5
-20 PRINT "The value of a is: ", a
-30 IF a > 3 THEN 50
-40 PRINT "This won't be printed"
-50 PRINT "Done!"
+10 REM As witnessed by rem in the Roswaal Mansion
+20 LET m = 5
+30 PRINT "Subaru's current mana level: ", m
+40 IF m > 3 THEN 50
+50 PRINT "Return by De... [Message corrupted]"
+60 PRINT "Rem believes in Subaru-kun!"
 ```
 
-## License
+## ✨ Manifestation
 
-This software is released under the Apache License, Version 2.0.
-For details, see http://www.apache.org/licenses/LICENSE-2.0
+When properly channeled, the interpreter reveals Subaru's messages:
 
-## Acknowledgments
+```
+Subaru's current mana level: 5
+Rem believes in Subaru-kun!
+```
 
-- Original VVTBI concept by Jahan Addison (Mentor) `<jahan[at]jahanaddison[dot]com>`
-- Special thanks to the original author for the inspiration and basic interpreter design
-- This version is maintained by Daniel `<nnamdidaniel114[at]gmail.com>`
+### Example
 
-## A Note from the Author
+## 📖 Grimoire License
 
-This implementation of VVTBI, while perhaps not the most efficient tokenization solution available today, serves as an educational exploration of interpreter design and C++ programming fundamentals. It demonstrates core concepts like:
+This magical artifact is bound by the Apache License, Version 2.0.
+For the complete binding contract, consult: http://www.apache.org/licenses/LICENSE-2.0
 
-- Lexical analysis
-- Token-based parsing
-- Basic control flow
-- Error handling
-- File I/O
+## 🌸 Gratitude to the Spirit Arts Users
 
-Sometimes the longer path teaches us more than the shortcut.
+- Original SUBARU concept blessed by Jahan Addison (Spirit Arts Master) `<jahan[at]jahanaddison[dot]com>`
+- Deep gratitude to Rem for her unwavering support in debugging Subaru's messages
+- This incarnation is maintained by Daniel, apprentice to the Witch of Pride `<nnamdidaniel114[at]gmail.com>`
 
-For questions or feedback: `nnamdidaniel114[at]gmail.com`
+## 📝 Message from the Witch Cultist
+
+This implementation of SUBARU, while perhaps not as refined as Beatrice's library of spells, serves as an educational journey into the art of interpreter creation and C++ enchantments. It illuminates core mysteries such as:
+
+- Lexical divination
+- Token-based prophecy
+- Mana flow control
+- Error barrier generation
+- Magical I/O streams
+
+As Subaru often says, "The path of greatest resistance leads to the strongest growth."
+
+Should you wish to summon me for questions or feedback: `nnamdidaniel114[at]gmail.com`
+
+_Remember: This interpreter can only manifest once per checkpoint. Choose your commands wisely._

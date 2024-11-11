@@ -3,14 +3,14 @@
 
 #include <cstddef>
 
-// Vvtbi file extension.
-constexpr char VVTBI_EXTENSION_LITERAL[] = "vvtb";
+// SUBARUU file extension.
+constexpr char SUBARUU_EXTENSION_LITERAL[] = "subaru";
 
 // The maximum length of string literals.
-constexpr std::size_t VVTBI_STRING_LITERAL = 50;
-constexpr std::size_t VVTBI_NUMBER_LITERAL = 8;
+constexpr std::size_t SUBARUU_STRING_LITERAL = 50;
+constexpr std::size_t SUBARUU_NUMBER_LITERAL = 8;
 
 // Interpreter constants
-constexpr std::size_t VVTBI_MAX_VARIABLES = 26;
-constexpr int VVTBI_DIVIDE_BY_ZERO_RESULT = 0;
-constexpr bool VVTBI_TERMINATE_ON_DIV_ZERO = false;
+constexpr std::size_t SUBARUU_MAX_VARIABLES = 26;
+constexpr int SUBARUU_DIVIDE_BY_ZERO_RESULT = 0;
+constexpr bool SUBARUU_TERMINATE_ON_DIV_ZERO = false;

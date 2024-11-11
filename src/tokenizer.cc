@@ -423,7 +423,7 @@ Tokenizer::TokenType Tokenizer::get_next_token() {
  * Assumes current char is opening quote
  * Reads until closing quote or EOF
  * Handles:
- * - Max string length (VVTBI_STRING_LITERAL)
+ * - Max string length (SUBARUU_STRING_LITERAL)
  * - Whitespace after string
  * - Unclosed strings preserved as-is
  */
@@ -441,7 +441,7 @@ Tokenizer::TokenType Tokenizer::token_string() {
             }
             return TokenType::STRING;
         }
-        if (str.size() >= VVTBI_STRING_LITERAL) {
+        if (str.size() >= SUBARUU_STRING_LITERAL) {
             break;
         }
         str += c;
@@ -506,7 +506,7 @@ Tokenizer::TokenType Tokenizer::token_keyword() {
  *
  * Handles:
  * - Leading/trailing whitespace
- * - Max number length (VVTBI_NUMBER_LITERAL)
+ * - Max number length (SUBARUU_NUMBER_LITERAL)
  * - Invalid number formats
  * Updates token_data with parsed value
  */
@@ -516,7 +516,7 @@ Tokenizer::TokenType Tokenizer::token_number() {
         io_->next();
     }
     while (!io_->eof() && std::isdigit(io_->current()) &&
-           num_str.size() < VVTBI_NUMBER_LITERAL) {
+           num_str.size() < SUBARUU_NUMBER_LITERAL) {
         num_str += io_->current();
         io_->next();
     }
