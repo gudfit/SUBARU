@@ -1,4 +1,4 @@
-#include "../../include/vvtbi.h"
+#include "../../include/subaruu.h"
 #include <catch2/catch_test_macros.hpp>
 #include <filesystem>
 #include <fstream>
@@ -6,15 +6,15 @@
 #include <sstream>
 #include <string>
 
-TEST_CASE("VVTBI Basic Execution", "[vvtbi]") {
-    SECTION("Running test.vvtb") {
+TEST_CASE("SUBARU Basic Execution", "[subaru]") {
+    SECTION("Running test.subaru") {
         // Capture output
         std::stringstream output;
         std::streambuf* old_cout = std::cout.rdbuf(output.rdbuf());
 
         // Run interpreter within a lambda passed to REQUIRE_NOTHROW
         REQUIRE_NOTHROW([&]() {
-            VVTBI interpreter("tests/test.vvtb");
+            SUBARUU interpreter("tests/test.subaru");
             interpreter.run();
         }());
 
@@ -26,13 +26,13 @@ TEST_CASE("VVTBI Basic Execution", "[vvtbi]") {
     }
 }
 
-TEST_CASE("VVTBI REM Statement Handling", "[vvtbi]") {
-    SECTION("Running test1.vvtb") {
+TEST_CASE("SUBARUU REM Statement Handling", "[subaru]") {
+    SECTION("Running test1.subaru") {
         std::stringstream output;
         std::streambuf* old_cout = std::cout.rdbuf(output.rdbuf());
 
         REQUIRE_NOTHROW([&]() {
-            VVTBI interpreter("tests/test1.vvtb");
+            SUBARUU interpreter("tests/test1.subaru");
             interpreter.run();
         }());
 
@@ -42,13 +42,13 @@ TEST_CASE("VVTBI REM Statement Handling", "[vvtbi]") {
     }
 }
 
-TEST_CASE("VVTBI IF and GOTO Statements", "[vvtbi]") {
-    SECTION("Running test2.vvtb") {
+TEST_CASE("SUBARU IF and GOTO Statements", "[subaru]") {
+    SECTION("Running test2.subaru") {
         std::stringstream output;
         std::streambuf* old_cout = std::cout.rdbuf(output.rdbuf());
 
         REQUIRE_NOTHROW([&]() {
-            VVTBI interpreter("tests/test2.vvtb");
+            SUBARUU interpreter("tests/test2.subaru");
             interpreter.run();
         }());
 
@@ -58,13 +58,13 @@ TEST_CASE("VVTBI IF and GOTO Statements", "[vvtbi]") {
     }
 }
 
-TEST_CASE("VVTBI REM with IF and GOTO", "[vvtbi]") {
-    SECTION("Running test3.vvtb") {
+TEST_CASE("SUBARU REM with IF and GOTO", "[subaru]") {
+    SECTION("Running test3.subaru") {
         std::stringstream output;
         std::streambuf* old_cout = std::cout.rdbuf(output.rdbuf());
 
         REQUIRE_NOTHROW([&]() {
-            VVTBI interpreter("tests/test3.vvtb");
+            SUBARUU interpreter("tests/test3.subaru");
             interpreter.run();
         }());
 
@@ -74,13 +74,13 @@ TEST_CASE("VVTBI REM with IF and GOTO", "[vvtbi]") {
     }
 }
 
-TEST_CASE("VVTBI Complex Arithmetic", "[vvtbi]") {
-    SECTION("Running test4.vvtb") {
+TEST_CASE("SUBARU Complex Arithmetic", "[subaru]") {
+    SECTION("Running test4.subaru") {
         std::stringstream output;
         std::streambuf* old_cout = std::cout.rdbuf(output.rdbuf());
 
         REQUIRE_NOTHROW([&]() {
-            VVTBI interpreter("tests/test4.vvtb");
+            SUBARUU interpreter("tests/test4.subaru");
             interpreter.run();
         }());
 
@@ -97,9 +97,9 @@ TEST_CASE("VVTBI Complex Arithmetic", "[vvtbi]") {
     }
 }
 
-TEST_CASE("VVTBI GOTO Statement Tests", "[vvtbi]") {
+TEST_CASE("SUBARUU GOTO Statement Tests", "[subaru]") {
     SECTION("Basic GOTO with IF") {
-        std::string temp_filename = "temp_goto_test1.vvtb";
+        std::string temp_filename = "temp_goto_test1.subaru";
         std::ofstream temp_file(temp_filename);
         temp_file << "REM Testing basic GOTO with IF\n"
                   << "10 LET a = 5\n"
@@ -112,7 +112,7 @@ TEST_CASE("VVTBI GOTO Statement Tests", "[vvtbi]") {
         std::streambuf* old_cout = std::cout.rdbuf(output.rdbuf());
 
         REQUIRE_NOTHROW([&]() {
-            VVTBI interpreter(temp_filename);
+            SUBARUU interpreter(temp_filename);
             interpreter.run();
         }());
 
@@ -123,7 +123,7 @@ TEST_CASE("VVTBI GOTO Statement Tests", "[vvtbi]") {
     }
 
     SECTION("GOTO with Multiple Conditions") {
-        std::string temp_filename = "temp_goto_test2.vvtb";
+        std::string temp_filename = "temp_goto_test2.subaru";
         std::ofstream temp_file(temp_filename);
         temp_file << "REM Testing multiple conditions\n"
                   << "10 LET a = 1\n"
@@ -138,7 +138,7 @@ TEST_CASE("VVTBI GOTO Statement Tests", "[vvtbi]") {
         std::streambuf* old_cout = std::cout.rdbuf(output.rdbuf());
 
         REQUIRE_NOTHROW([&]() {
-            VVTBI interpreter(temp_filename);
+            SUBARUU interpreter(temp_filename);
             interpreter.run();
         }());
 

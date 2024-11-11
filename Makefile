@@ -1,6 +1,6 @@
 #############################################################
 CXX        = g++
-NAME       = vvtbi
+NAME       = subaruu
 SRCDIR     = src
 OBJDIR     = obj
 TESTDIR    = tests/unit
@@ -10,13 +10,13 @@ DEBUGFLAGS = -DDEBUG_MODE
 #############################################################
 #### DO NOT EDIT BELOW THIS LINE ############################
 VERSION    = 3.0
-SOURCES    = io.cc tokenizer.cc vvtbi.cc main.cc
+SOURCES    = io.cc tokenizer.cc subaruu.cc main.cc
 OBJS       = $(SOURCES:%.cc=$(OBJDIR)/%.o)
 
 # Test related variables
-TEST_SOURCES = io_test.cc tokenizer_test.cc vvtbi_test.cc
+TEST_SOURCES = io_test.cc tokenizer_test.cc subaruu_test.cc
 TEST_OBJS    = $(TEST_SOURCES:%.cc=$(TEST_OBJDIR)/%.o)
-TEST_DEPS    = $(TEST_OBJDIR)/io.o $(TEST_OBJDIR)/tokenizer.o $(TEST_OBJDIR)/vvtbi.o
+TEST_DEPS    = $(TEST_OBJDIR)/io.o $(TEST_OBJDIR)/tokenizer.o $(TEST_OBJDIR)/subaruu.o
 TEST_TARGET  = run_tests
 
 # Main target
@@ -24,9 +24,9 @@ $(NAME): $(OBJS)
 	@$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
 	@echo ""
 	@echo "**************************************************"
-	@echo " Vvtbi: \"Very, Very, Tiny, Basic\" Interpreter"
+	@echo "SUBARU: \"Spiritually Unbridled Basic Arithmetic Resolver Unit\" - The Witch's Interpreter"
 	@echo " Version: "$(VERSION)
-	@echo " Vvtbi (the \"software\") is distributed under"
+	@echo " SUBARU (the \"software\") is distributed under"
 	@echo " the terms of the Apache License, Version 2.0."
 	@echo " For more information, see README and CHANGELOG."
 	@echo "         <nnamdidaniel114[at]gmail[dot]com>"
@@ -60,7 +60,7 @@ $(TEST_OBJDIR)/io.o: $(SRCDIR)/io.cc | $(TEST_OBJDIR)
 $(TEST_OBJDIR)/tokenizer.o: $(SRCDIR)/tokenizer.cc | $(TEST_OBJDIR)
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(TEST_OBJDIR)/vvtbi.o: $(SRCDIR)/vvtbi.cc | $(TEST_OBJDIR)
+$(TEST_OBJDIR)/subaruu.o: $(SRCDIR)/subaruu.cc | $(TEST_OBJDIR)
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Rule to create the test_obj directory

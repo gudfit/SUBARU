@@ -1,5 +1,5 @@
-#include "../include/vvtbi.h"
 #include "../include/common.h"
+#include "../include/subaruu.h"
 #include "../include/tokenizer.h"
 
 #include <cctype>
@@ -9,12 +9,12 @@
 #include <string_view>
 
 /**
- * Constructs a new VVTBI object and initialize with the given source file.
+ * Constructs a new SUBARUU object and initialize with the given source file.
  *
  * @param source The source code file.
  * @throws std::runtime_error if tokenizer initialization fails
  */
-VVTBI::VVTBI(std::string_view source)
+SUBARUU::SUBARUU(std::string_view source)
   : tokenizer_(std::make_unique<Tokenizer>(source))
   , execution_finished_(false)
   , skip_to_line_(false)
@@ -31,9 +31,9 @@ VVTBI::VVTBI(std::string_view source)
 }
 
 /**
- * Runs the VVTBI interpreter.
+ * Runs the SUBARUU interpreter.
  */
-void VVTBI::run() {
+void SUBARUU::run() {
     DEBUG_LOG("Starting program execution");
 
     // Build line map at start
@@ -91,7 +91,7 @@ void VVTBI::run() {
  * @param token The token type to convert to string
  * @return std::string The string representation of the token
  */
-std::string VVTBI::get_token_string(Tokenizer::TokenType token) const {
+std::string SUBARUU::get_token_string(Tokenizer::TokenType token) const {
     return std::string(tokenizer_->token_to_string(token));
 }
 
@@ -101,7 +101,7 @@ std::string VVTBI::get_token_string(Tokenizer::TokenType token) const {
  * @return true if execution has finished
  * @return false if execution is still ongoing
  */
-bool VVTBI::finished() const { return execution_finished_; }
+bool SUBARUU::finished() const { return execution_finished_; }
 
 /**
  * Debug print function with error handling.
@@ -111,7 +111,7 @@ bool VVTBI::finished() const { return execution_finished_; }
  * @param errorCode E_ERROR or E_WARNING
  * @throws std::runtime_error if errorCode is E_ERROR
  */
-void VVTBI::dprintf(const std::string& message, int errorCode) {
+void SUBARUU::dprintf(const std::string& message, int errorCode) {
     if (errorCode == E_ERROR) {
         std::cerr << "ERROR: " << message << std::endl;
         throw std::runtime_error(message);
@@ -126,9 +126,9 @@ void VVTBI::dprintf(const std::string& message, int errorCode) {
  * @param expectedToken The token type that should be next in the stream
  * @throws std::runtime_error if the current token doesn't match expected
  */
-void VVTBI::accept(Tokenizer::TokenType expectedToken) {
+void SUBARUU::accept(Tokenizer::TokenType expectedToken) {
     if (tokenizer_->current_token() != expectedToken) {
-        std::string error = "*vvtbi.cpp: unexpected `" +
+        std::string error = "*subaruu.cpp: unexpected `" +
                             get_token_string(tokenizer_->current_token()) +
                             "` expected `" + get_token_string(expectedToken) +
                             "`";
@@ -147,7 +147,7 @@ void VVTBI::accept(Tokenizer::TokenType expectedToken) {
  * @return int The evaluated value of the factor
  * @throws std::runtime_error on syntax errors
  */
-int VVTBI::factor() {
+int SUBARUU::factor() {
     int result = 0;
     const auto token = tokenizer_->current_token();
 
@@ -192,7 +192,7 @@ int VVTBI::factor() {
  *
  * @return int The evaluated term value
  */
-int VVTBI::term() {
+int SUBARUU::term() {
     DEBUG_LOG("Starting term evaluation");
 
     int result = factor();
@@ -223,7 +223,7 @@ int VVTBI::term() {
  *
  * @return int The evaluated expression value
  */
-int VVTBI::expression() {
+int SUBARUU::expression() {
     DEBUG_LOG("Starting expression evaluation");
 
     int result = term();
@@ -261,7 +261,7 @@ int VVTBI::expression() {
  * @param num The number to check
  * @return bool True if this appears to be a line number
  */
-bool VVTBI::is_valid_line_number(int num) const {
+bool SUBARUU::is_valid_line_number(int num) const {
     if (num >= 10 && num % 10 == 0) {
         if (tokenizer_->finished()) {
             return true; // EOF after line number is acceptable
@@ -279,7 +279,7 @@ bool VVTBI::is_valid_line_number(int num) const {
  * @param denominator The division denominator
  * @return int The division result or 0 for division by zero
  */
-int VVTBI::safe_divide(int numerator, int denominator) {
+int SUBARUU::safe_divide(int numerator, int denominator) {
     if (denominator == 0) {
         dprintf("*warning: divide by zero", E_WARNING);
         DEBUG_LOG("Division by zero detected, setting result to 0");
@@ -299,7 +299,7 @@ int VVTBI::safe_divide(int numerator, int denominator) {
  * @return int 1 for true, 0 for false
  * @throws std::runtime_error on invalid comparison operator
  */
-int VVTBI::relation() {
+int SUBARUU::relation() {
     DEBUG_LOG("Starting relation evaluation");
 
     int left = expression();
@@ -355,7 +355,7 @@ int VVTBI::relation() {
  *
  * @throws std::runtime_error on syntax errors
  */
-void VVTBI::let_statement() {
+void SUBARUU::let_statement() {
     DEBUG_LOG("Processing LET statement");
 
     // Get variable name
@@ -399,7 +399,7 @@ void VVTBI::let_statement() {
  * @throws std::runtime_error on syntax errors
  */
 
-void VVTBI::if_statement() {
+void SUBARUU::if_statement() {
     DEBUG_LOG("Processing IF statement");
     accept(Tokenizer::TokenType::IF);
     int condition = relation();
@@ -442,7 +442,7 @@ void VVTBI::if_statement() {
  * Format: GOTO line_number
  */
 
-void VVTBI::goto_statement() {
+void SUBARUU::goto_statement() {
     accept(Tokenizer::TokenType::GOTO);
     int line_number = tokenizer_->get_num();
     accept(Tokenizer::TokenType::NUMBER);
@@ -470,7 +470,7 @@ void VVTBI::goto_statement() {
  * @param line_number The target line number to find
  * @return bool True if line was found, false if reached end without finding
  */
-bool VVTBI::find_target_line(int line_number) {
+bool SUBARUU::find_target_line(int line_number) {
     while (!tokenizer_->finished()) {
         if (tokenizer_->current_token() == Tokenizer::TokenType::NUMBER &&
             tokenizer_->get_num() == line_number) {
@@ -495,7 +495,7 @@ bool VVTBI::find_target_line(int line_number) {
  * Executes a PRINT statement.
  * Format: PRINT [expression|string|separator]...
  */
-void VVTBI::print_statement() {
+void SUBARUU::print_statement() {
     DEBUG_LOG("Entering print_statement");
     accept(Tokenizer::TokenType::PRINT);
     bool need_space = false;
@@ -559,7 +559,7 @@ end_print:
 /**
  * Checks if the current token indicates end of statement
  */
-bool VVTBI::is_statement_end(Tokenizer::TokenType token) const {
+bool SUBARUU::is_statement_end(Tokenizer::TokenType token) const {
     return token == Tokenizer::TokenType::EOL ||
            token == Tokenizer::TokenType::EOF_TOKEN;
 }
@@ -567,7 +567,7 @@ bool VVTBI::is_statement_end(Tokenizer::TokenType token) const {
 /**
  * Checks if current token is a valid line number
  */
-bool VVTBI::is_line_number() const {
+bool SUBARUU::is_line_number() const {
     if (tokenizer_->current_token() != Tokenizer::TokenType::NUMBER) {
         return false;
     }
@@ -585,7 +585,7 @@ bool VVTBI::is_line_number() const {
  *
  * @throws std::runtime_error on syntax errors
  */
-void VVTBI::statement() {
+void SUBARUU::statement() {
     auto token = tokenizer_->current_token();
     DEBUG_LOG("Processing statement with token: " << get_token_string(token));
     switch (token) {
@@ -626,7 +626,7 @@ void VVTBI::statement() {
  * Handles line numbers and statement execution.
  */
 
-void VVTBI::line_statement() {
+void SUBARUU::line_statement() {
     DEBUG_LOG("Starting line_statement");
     // Skip empty lines
     while (tokenizer_->current_token() == Tokenizer::TokenType::EOL) {
@@ -649,7 +649,7 @@ void VVTBI::line_statement() {
  * Builds a map of line numbers in the program.
  * Maps each line number to its position in the source.
  */
-void VVTBI::build_line_map() {
+void SUBARUU::build_line_map() {
     DEBUG_LOG("Building line number map");
     line_positions_.clear();
     tokenizer_->reset();
@@ -679,7 +679,7 @@ void VVTBI::build_line_map() {
 /**
  * Helper to log all found line numbers during map building
  */
-void VVTBI::log_found_line_numbers(
+void SUBARUU::log_found_line_numbers(
   const std::unordered_map<int, bool>& found_lines) {
     std::string line_numbers;
     for (const auto& [line, _] : found_lines) {
@@ -699,7 +699,7 @@ void VVTBI::log_found_line_numbers(
  * @throws std::runtime_error if line number not found
  */
 
-void VVTBI::find_linenum(int linenum) {
+void SUBARUU::find_linenum(int linenum) {
     DEBUG_LOG("Searching for line number: " << linenum);
 
     // Build line map if needed
@@ -726,7 +726,7 @@ void VVTBI::find_linenum(int linenum) {
  *
  * @param linenum The line number to jump to
  */
-void VVTBI::jump_linenum(int linenum) {
+void SUBARUU::jump_linenum(int linenum) {
     DEBUG_LOG("Attempting to jump to line " << linenum);
     if (line_positions_.empty()) {
         build_line_map();
@@ -758,7 +758,7 @@ void VVTBI::jump_linenum(int linenum) {
 /**
  * Helper to log available line numbers when target not found
  */
-void VVTBI::log_available_lines(int target_line) {
+void SUBARUU::log_available_lines(int target_line) {
     DEBUG_LOG("Line " << target_line << " not found in map. Available lines:");
     for (const auto& [line, _] : line_positions_) {
         DEBUG_LOG(" " << line);

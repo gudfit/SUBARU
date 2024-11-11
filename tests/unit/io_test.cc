@@ -4,18 +4,18 @@
 
 TEST_CASE("IO Basic File Operations", "[io]") {
     SECTION("Opening existing test files") {
-        REQUIRE_NOTHROW(IO("tests/test.vvtb"));
-        REQUIRE_NOTHROW(IO("tests/test1.vvtb"));
-        REQUIRE_NOTHROW(IO("tests/test2.vvtb"));
+        REQUIRE_NOTHROW(IO("tests/test.subaru"));
+        REQUIRE_NOTHROW(IO("tests/test1.subaru"));
+        REQUIRE_NOTHROW(IO("tests/test2.subaru"));
     }
 
     SECTION("Opening non-existent file throws") {
-        REQUIRE_THROWS_AS(IO("tests/nonexistent.vvtb"), std::runtime_error);
+        REQUIRE_THROWS_AS(IO("tests/nonexistent.subaru"), std::runtime_error);
     }
 }
 
 TEST_CASE("IO Reading Operations", "[io]") {
-    IO io("tests/test.vvtb");
+    IO io("tests/test.subaru");
 
     SECTION("Reading characters sequentially") {
         // Store initial character
@@ -35,7 +35,7 @@ TEST_CASE("IO Reading Operations", "[io]") {
 }
 
 TEST_CASE("IO String Operations", "[io]") {
-    IO io("tests/test.vvtb");
+    IO io("tests/test.subaru");
 
     SECTION("to_string basic functionality") {
         std::string result = io.to_string(5);
@@ -44,7 +44,7 @@ TEST_CASE("IO String Operations", "[io]") {
 }
 
 TEST_CASE("IO File Navigation", "[io]") {
-    IO io("tests/test.vvtb");
+    IO io("tests/test.subaru");
 
     SECTION("Seek operations") {
         io.seek(5, std::ios::beg);
@@ -60,16 +60,17 @@ TEST_CASE("IO File Navigation", "[io]") {
 }
 
 TEST_CASE("IO File Switching", "[io]") {
-    IO io("tests/test1.vvtb");
+    IO io("tests/test1.subaru");
 
     SECTION("Switch to another test file") {
         char first_file_char = io.peek();
-        io.set("tests/test2.vvtb");
+        io.set("tests/test2.subaru");
         REQUIRE(io.peek() != first_file_char);
     }
 
     SECTION("Switch to invalid file throws") {
-        REQUIRE_THROWS_AS(io.set("tests/nonexistent.vvtb"), std::runtime_error);
+        REQUIRE_THROWS_AS(io.set("tests/nonexistent.subaru"),
+                          std::runtime_error);
     }
 }
 #define CATCH_CONFIG_MAIN

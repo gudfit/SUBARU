@@ -4,20 +4,22 @@
 
 TEST_CASE("Tokenizer Basic Operations", "[tokenizer]") {
     SECTION("Creating tokenizer with valid input") {
-        REQUIRE_NOTHROW(Tokenizer("tests/test.vvtb"));  // Simple Hello World
-        REQUIRE_NOTHROW(Tokenizer("tests/test1.vvtb")); // Hello World with REM
-        REQUIRE_NOTHROW(Tokenizer("tests/test2.vvtb")); // Basic IF statement
-        REQUIRE_NOTHROW(Tokenizer("tests/test3.vvtb")); // IF statement with REM
-        REQUIRE_NOTHROW(Tokenizer("tests/test4.vvtb")); // Complex arithmetic
+        REQUIRE_NOTHROW(Tokenizer("tests/test.subaru")); // Simple Hello World
+        REQUIRE_NOTHROW(
+          Tokenizer("tests/test1.subaru")); // Hello World with REM
+        REQUIRE_NOTHROW(Tokenizer("tests/test2.subaru")); // Basic IF statement
+        REQUIRE_NOTHROW(
+          Tokenizer("tests/test3.subaru")); // IF statement with REM
+        REQUIRE_NOTHROW(Tokenizer("tests/test4.subaru")); // Complex arithmetic
     }
 
     SECTION("Creating tokenizer with invalid file throws") {
-        REQUIRE_THROWS_AS(Tokenizer("nonexistent.vvtb"), std::runtime_error);
+        REQUIRE_THROWS_AS(Tokenizer("nonexistent.subaru"), std::runtime_error);
     }
 }
 
 TEST_CASE("Tokenizer Line Number Processing", "[tokenizer]") {
-    Tokenizer tokenizer("tests/test.vvtb");
+    Tokenizer tokenizer("tests/test.subaru");
 
     SECTION("Line number recognition") {
         REQUIRE(tokenizer.get_num() == 10);
@@ -26,7 +28,7 @@ TEST_CASE("Tokenizer Line Number Processing", "[tokenizer]") {
 }
 
 TEST_CASE("Tokenizer String Handling", "[tokenizer]") {
-    Tokenizer tokenizer("tests/test.vvtb");
+    Tokenizer tokenizer("tests/test.subaru");
 
     SECTION("Hello World string") {
         // Skip to string: "10 PRINT" -> string
@@ -37,7 +39,7 @@ TEST_CASE("Tokenizer String Handling", "[tokenizer]") {
 }
 
 TEST_CASE("Tokenizer REM Statement", "[tokenizer]") {
-    Tokenizer tokenizer("tests/test1.vvtb");
+    Tokenizer tokenizer("tests/test1.subaru");
 
     SECTION("REM statement handling") {
         tokenizer.skip_to_eol(); // Should skip the entire REM line
@@ -47,7 +49,7 @@ TEST_CASE("Tokenizer REM Statement", "[tokenizer]") {
 }
 
 TEST_CASE("Tokenizer Variable Recognition", "[tokenizer]") {
-    Tokenizer tokenizer("tests/test2.vvtb");
+    Tokenizer tokenizer("tests/test2.subaru");
 
     SECTION("Variable assignment") {
         // Skip to 'a' in "LET a = 5"
@@ -58,7 +60,7 @@ TEST_CASE("Tokenizer Variable Recognition", "[tokenizer]") {
 }
 
 TEST_CASE("Tokenizer Complex Expressions", "[tokenizer]") {
-    Tokenizer tokenizer("tests/test4.vvtb");
+    Tokenizer tokenizer("tests/test4.subaru");
 
     SECTION("Multiple operations") {
         bool found_arithmetic = false;
@@ -76,7 +78,7 @@ TEST_CASE("Tokenizer Complex Expressions", "[tokenizer]") {
 }
 
 TEST_CASE("Tokenizer Reset Functionality", "[tokenizer]") {
-    Tokenizer tokenizer("tests/test.vvtb");
+    Tokenizer tokenizer("tests/test.subaru");
 
     SECTION("Reset after navigation") {
         auto first_token_data = tokenizer.get_token_data();
@@ -88,7 +90,7 @@ TEST_CASE("Tokenizer Reset Functionality", "[tokenizer]") {
 }
 
 TEST_CASE("Tokenizer String Content", "[tokenizer]") {
-    Tokenizer tokenizer("tests/test1.vvtb");
+    Tokenizer tokenizer("tests/test1.subaru");
 
     SECTION("Navigate and check string content") {
         tokenizer.skip_to_eol(); // Skip REM line

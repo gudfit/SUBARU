@@ -7,10 +7,10 @@
 #include <string_view>
 #include <unordered_map>
 
-class VVTBI {
+class SUBARUU {
     public:
-        explicit VVTBI(std::string_view source);
-        ~VVTBI() = default;
+        explicit SUBARUU(std::string_view source);
+        ~SUBARUU() = default;
 
         void run();
         std::string get_token_string(Tokenizer::TokenType token) const;
