@@ -44,6 +44,8 @@ Rem believes in Subaru-kun!
 
 ### Example
 
+![SUBARU Execution Example](Images/image.png)
+
 ## 📖 Grimoire License
 
 This magical artifact is bound by the Apache License, Version 2.0.
