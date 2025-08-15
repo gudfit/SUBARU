@@ -1,7 +1,9 @@
-#pragma once
+// include/subaruu.h
 
+#pragma once
 #include "config.h"
 #include "tokenizer.h"
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -9,6 +11,8 @@
 
 class SUBARUU {
     public:
+        using value_t = std::int64_t;
+
         explicit SUBARUU(std::string_view source);
         ~SUBARUU() = default;
 
@@ -16,21 +20,23 @@ class SUBARUU {
         std::string get_token_string(Tokenizer::TokenType token) const;
         bool finished() const;
 
+#ifdef DEBUG_MODE
         void log_found_line_numbers(
           const std::unordered_map<int, bool>& found_lines);
         void log_available_lines(int target_line);
+#endif
 
     private:
         // Token processing
         void accept(Tokenizer::TokenType expectedToken);
 
         // Expression parsing
-        int expression();
-        int term();
-        int factor();
+        value_t expression();
+        value_t term();
+        value_t factor();
         int relation();
 
-        // Statement handling
+        // Statements
         void statement();
         void line_statement();
         void let_statement();
@@ -38,9 +44,7 @@ class SUBARUU {
         void goto_statement();
         void print_statement();
 
-        // Line number management
-        void find_linenum(int linenum);
-        void jump_linenum(int linenum);
+        // Line helpers
         void build_line_map();
         bool find_target_line(int line_number);
 
@@ -49,16 +53,16 @@ class SUBARUU {
         bool is_line_number() const;
         bool is_statement_end(Tokenizer::TokenType token) const;
 
-        // Error handling
+        // Errors
         enum ErrorCode { E_ERROR = 1, E_WARNING };
         void dprintf(const std::string& message, int errorCode);
-        int safe_divide(int numerator, int denominator);
+        value_t safe_divide(value_t numerator, value_t denominator);
 
-        // Member variables
+        // State
         std::unique_ptr<Tokenizer> tokenizer_;
-        std::unordered_map<char, int> variables_;
+        std::unordered_map<char, value_t> variables_;
+        // indexed memory
+        std::unordered_map<long long, value_t> memory_;
         std::unordered_map<int, bool> line_positions_;
         bool execution_finished_;
-        bool skip_to_line_;
-        int target_line_;
 };

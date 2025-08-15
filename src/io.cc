@@ -33,17 +33,17 @@ IO::~IO() noexcept { close(); }
  * @throws std::runtime_error If the file cannot be opened
  */
 void IO::load_file() {
-    std::ifstream file_stream(filename_, std::ios::binary);
+    std::ifstream file_stream(std::string(filename_), std::ios::binary);
     if (!file_stream.is_open()) {
         throw std::runtime_error("Failed to open file: " +
                                  std::string(filename_));
     }
-
     std::stringstream buffer;
     buffer << file_stream.rdbuf();
     content_ = buffer.str();
     current_pos_ = content_.begin();
 }
+
 /**
  * reset
  *
@@ -77,15 +77,13 @@ void IO::close() noexcept {
 std::string IO::to_string(std::size_t n) {
     if (eof())
         return {};
-
     auto end_pos = current_pos_;
-    std::size_t chars_left = std::distance(current_pos_, content_.end());
-    std::size_t chars_to_read = std::min(n, chars_left);
-
-    std::advance(end_pos, chars_to_read);
+    const auto chars_left =
+      static_cast<std::size_t>(std::distance(current_pos_, content_.end()));
+    const auto chars_to_read = std::min(n, chars_left);
+    std::advance(end_pos, static_cast<long>(chars_to_read));
     std::string result(current_pos_, end_pos);
     current_pos_ = end_pos;
-
     return result;
 }
 
@@ -131,29 +129,8 @@ void IO::seek(long offset, std::ios_base::seekdir whence) {
         default:
             throw std::invalid_argument("Invalid seek direction");
     }
-
-    // Bounds checking
-    if (current_pos_ < content_.begin()) {
+    if (current_pos_ < content_.begin())
         current_pos_ = content_.begin();
-    } else if (current_pos_ > content_.end()) {
+    if (current_pos_ > content_.end())
         current_pos_ = content_.end();
-    }
-}
-
-/**
- * peek
- *
- * Returns the current character in the input stream without advancing the
- * position. If at the end of the stream, returns '\0'.
- *
- * @param void
- * @return char
- */
-
-int IO::peek() { // Changed return type to int
-    if (current_pos_ != content_.end()) {
-        return static_cast<unsigned char>(*current_pos_);
-    } else {
-        return EOF;
-    }
 }

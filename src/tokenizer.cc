@@ -20,11 +20,6 @@ Tokenizer::Tokenizer(std::string_view source)
   : io_(std::make_unique<IO>(std::string(source)))
   , current_token_(TokenType::ERROR)
   , token_data_(std::monostate()) {
-    // Initialize keywords with their corresponding token types
-    keywords_ = { { "let", TokenType::LET },   { "if", TokenType::IF },
-                  { "then", TokenType::THEN }, { "print", TokenType::PRINT },
-                  { "rem", TokenType::REM },   { "goto", TokenType::GOTO } };
-
     // Initialize the first token
     current_token_ = get_next_token();
 }
@@ -36,9 +31,8 @@ Tokenizer::Tokenizer(std::string_view source)
  * Ensures IO stream is properly closed if it exists
  */
 Tokenizer::~Tokenizer() {
-    if (io_) {
+    if (io_)
         io_->close();
-    }
 }
 
 /**
@@ -77,7 +71,17 @@ void Tokenizer::reset(TokenType to) { current_token_ = to; }
  * @param void
  * @return Next character in input stream
  */
-char Tokenizer::peek_char() { return io_->peek(); }
+char Tokenizer::peek_char() {
+    auto it = io_->position();
+    auto end = io_->end();
+    if (it != end) {
+        auto next_it = it;
+        ++next_it;
+        if (next_it != end)
+            return *next_it;
+    }
+    return '\0';
+}
 
 /**
  * skip_char
@@ -147,6 +151,10 @@ std::string_view Tokenizer::token_to_string(TokenType token) const {
             return "LEFT_PAREN";
         case TokenType::RIGHT_PAREN:
             return "RIGHT_PAREN";
+        case TokenType::LEFT_BRACKET:
+            return "LEFT_BRACKET";
+        case TokenType::RIGHT_BRACKET:
+            return "RIGHT_BRACKET";
         case TokenType::EOL:
             return "EOL";
         default:
@@ -193,10 +201,10 @@ bool Tokenizer::finished() const {
  */
 int Tokenizer::variable_num() const {
     if (std::holds_alternative<char>(token_data_)) {
-        char letter = std::get<char>(token_data_);
-        if (letter >= 'a' && letter <= 'z') {
+        unsigned char letter =
+          static_cast<unsigned char>(std::get<char>(token_data_));
+        if (letter >= 'a' && letter <= 'z')
             return letter - 'a';
-        }
     }
     return 0;
 }
@@ -212,9 +220,8 @@ int Tokenizer::variable_num() const {
  */
 std::string_view Tokenizer::get_string() const {
     static const std::string empty;
-    if (std::holds_alternative<std::string>(token_data_)) {
+    if (std::holds_alternative<std::string>(token_data_))
         return std::get<std::string>(token_data_);
-    }
     return empty;
 }
 
@@ -228,9 +235,8 @@ std::string_view Tokenizer::get_string() const {
  *         0 otherwise
  */
 int Tokenizer::get_num() const {
-    if (std::holds_alternative<int>(token_data_)) {
+    if (std::holds_alternative<int>(token_data_))
         return std::get<int>(token_data_);
-    }
     return 0;
 }
 
@@ -246,13 +252,10 @@ int Tokenizer::get_num() const {
  * @return void
  */
 void Tokenizer::next_token() {
-    if (finished()) {
+    if (finished())
         return;
-    }
-    // Skip spaces and tabs, but not newlines
-    while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t')) {
+    while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t'))
         io_->next();
-    }
     current_token_ = get_next_token();
 }
 
@@ -267,15 +270,13 @@ void Tokenizer::next_token() {
  * @return void
  */
 void Tokenizer::skip_to_eol() {
-    while (!io_->eof() && io_->current() != '\n' && io_->current() != '\r') {
+    while (!io_->eof() && io_->current() != '\n' && io_->current() != '\r')
         io_->next();
-    }
     if (!io_->eof()) {
         if (io_->current() == '\r') {
             io_->next();
-            if (!io_->eof() && io_->current() == '\n') {
+            if (!io_->eof() && io_->current() == '\n')
                 io_->next();
-            }
         } else if (io_->current() == '\n') {
             io_->next();
         }
@@ -303,113 +304,95 @@ void Tokenizer::skip_to_eol() {
  * - Line endings
  */
 Tokenizer::TokenType Tokenizer::get_next_token() {
-    if (io_->eof()) {
+    if (io_->eof())
         return TokenType::EOF_TOKEN;
-    }
     char c = io_->current();
-    DEBUG_LOG("get_next_token processing char: '"
-              << (std::isprint(c) ? c : ' ')
-              << "' (ASCII: " << static_cast<int>(c) << ")");
     // Skip spaces and tabs, but not newlines
     while (!io_->eof() && (c == ' ' || c == '\t')) {
         io_->next();
         c = io_->current();
     }
-    // Handle EOL
+    // EOL
     if (c == '\n' || c == '\r') {
         if (c == '\r') {
             io_->next();
-            if (!io_->eof() && io_->current() == '\n') {
+            if (!io_->eof() && io_->current() == '\n')
                 io_->next();
-            }
         } else {
             io_->next();
         }
         return TokenType::EOL;
     }
     // Handle quoted strings
-    if (c == '"') {
+    if (c == '"')
         return token_string();
-    }
     // Handle numbers
-    if (std::isdigit(c)) {
+    if (std::isdigit(static_cast<unsigned char>(c)))
         return token_number();
-    }
     // Handle keywords and variables
-    if (std::isalpha(c)) {
-        if (std::isupper(c)) {
+    if (std::isalpha(static_cast<unsigned char>(c))) {
+        if (std::isupper(static_cast<unsigned char>(c)))
             return token_keyword();
-        } else {
-            token_data_ = c;
-            io_->next();
-            return TokenType::LETTER;
-        }
+        token_data_ = c;
+        io_->next();
+        return TokenType::LETTER;
     }
     // Handle separators
     if (c == ',' || c == ';') {
         io_->next();
-        DEBUG_LOG("Found separator");
         return TokenType::SEPARATOR;
     }
     // Handle operators and other tokens
-    TokenType token = TokenType::ERROR;
     switch (c) {
         case '=':
             io_->next();
-            token = TokenType::EQUAL;
-            break;
+            return TokenType::EQUAL;
         case '<':
             io_->next();
-            if (!io_->eof()) {
-                if (io_->current() == '=') {
-                    io_->next();
-                    token = TokenType::LT_EQ;
-                } else if (io_->current() == '>') {
-                    io_->next();
-                    token = TokenType::NOT_EQUAL;
-                } else {
-                    token = TokenType::LT;
-                }
+            if (!io_->eof() && io_->current() == '=') {
+                io_->next();
+                return TokenType::LT_EQ;
             }
-            break;
+            if (!io_->eof() && io_->current() == '>') {
+                io_->next();
+                return TokenType::NOT_EQUAL;
+            }
+            return TokenType::LT;
         case '>':
             io_->next();
             if (!io_->eof() && io_->current() == '=') {
                 io_->next();
-                token = TokenType::GT_EQ;
-            } else {
-                token = TokenType::GT;
+                return TokenType::GT_EQ;
             }
-            break;
+            return TokenType::GT;
         case '+':
             io_->next();
-            token = TokenType::PLUS;
-            break;
+            return TokenType::PLUS;
         case '-':
             io_->next();
-            token = TokenType::MINUS;
-            break;
+            return TokenType::MINUS;
         case '*':
             io_->next();
-            token = TokenType::ASTERISK;
-            break;
+            return TokenType::ASTERISK;
         case '/':
             io_->next();
-            token = TokenType::SLASH;
-            break;
+            return TokenType::SLASH;
         case '(':
             io_->next();
-            token = TokenType::LEFT_PAREN;
-            break;
+            return TokenType::LEFT_PAREN;
         case ')':
             io_->next();
-            token = TokenType::RIGHT_PAREN;
-            break;
+            return TokenType::RIGHT_PAREN;
+        case '[':
+            io_->next();
+            return TokenType::LEFT_BRACKET;
+        case ']':
+            io_->next();
+            return TokenType::RIGHT_BRACKET;
         default:
             io_->next();
-            token = TokenType::ERROR;
+            return TokenType::ERROR;
     }
-    return token;
 }
 
 /**
@@ -429,21 +412,19 @@ Tokenizer::TokenType Tokenizer::get_next_token() {
  */
 Tokenizer::TokenType Tokenizer::token_string() {
     std::string str;
-    io_->next(); // Skip initial quote
+    io_->next(); // skip opening quote
     while (!io_->eof()) {
         char c = io_->current();
         if (c == '"') {
             io_->next();
             token_data_ = str;
             while (!io_->eof() &&
-                   (io_->current() == ' ' || io_->current() == '\t')) {
+                   (io_->current() == ' ' || io_->current() == '\t'))
                 io_->next();
-            }
             return TokenType::STRING;
         }
-        if (str.size() >= SUBARUU_STRING_LITERAL) {
+        if (str.size() >= SUBARUU_STRING_LITERAL)
             break;
-        }
         str += c;
         io_->next();
     }
@@ -465,33 +446,29 @@ Tokenizer::TokenType Tokenizer::token_string() {
  * - Special REM keyword behavior
  */
 Tokenizer::TokenType Tokenizer::token_keyword() {
-    DEBUG_LOG("Processing possible keyword");
     std::string keyword;
+    while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t'))
+        io_->next();
+    while (!io_->eof() &&
+           std::isalpha(static_cast<unsigned char>(io_->current()))) {
+        keyword += static_cast<char>(
+          std::toupper(static_cast<unsigned char>(io_->current())));
+        io_->next();
+    }
+    while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t'))
+        io_->next();
 
-    while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t')) {
-        io_->next();
-    }
-    while (!io_->eof() && std::isalpha(io_->current())) {
-        keyword += static_cast<char>(std::toupper(io_->current()));
-        io_->next();
-    }
-    DEBUG_LOG("Found possible keyword: " << keyword);
-    std::string_view keyword_view(keyword);
-    if (keyword_view == "REM") {
+    if (keyword == "REM")
         return TokenType::REM;
-    }
-    while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t')) {
-        io_->next();
-    }
-    if (keyword_view == "PRINT")
+    if (keyword == "PRINT")
         return TokenType::PRINT;
-    if (keyword_view == "LET")
+    if (keyword == "LET")
         return TokenType::LET;
-    if (keyword_view == "IF")
+    if (keyword == "IF")
         return TokenType::IF;
-    if (keyword_view == "THEN")
+    if (keyword == "THEN")
         return TokenType::THEN;
-    if (keyword_view == "GOTO")
+    if (keyword == "GOTO")
         return TokenType::GOTO;
     return TokenType::ERROR;
 }
@@ -512,10 +489,10 @@ Tokenizer::TokenType Tokenizer::token_keyword() {
  */
 Tokenizer::TokenType Tokenizer::token_number() {
     std::string num_str;
-    while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t')) {
+    while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t'))
         io_->next();
-    }
-    while (!io_->eof() && std::isdigit(io_->current()) &&
+    while (!io_->eof() &&
+           std::isdigit(static_cast<unsigned char>(io_->current())) &&
            num_str.size() < SUBARUU_NUMBER_LITERAL) {
         num_str += io_->current();
         io_->next();
@@ -523,13 +500,11 @@ Tokenizer::TokenType Tokenizer::token_number() {
     if (!num_str.empty()) {
         try {
             token_data_ = std::stoi(num_str);
-
             while (!io_->eof() &&
-                   (io_->current() == ' ' || io_->current() == '\t')) {
+                   (io_->current() == ' ' || io_->current() == '\t'))
                 io_->next();
-            }
             return TokenType::NUMBER;
-        } catch (const std::exception&) {
+        } catch (...) {
             return TokenType::ERROR;
         }
     }

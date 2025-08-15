@@ -1,3 +1,5 @@
+// include/tokenizer.h
+
 #pragma once
 
 #include "config.h"
@@ -40,12 +42,9 @@ class Tokenizer {
             GOTO,
             LEFT_PAREN,
             RIGHT_PAREN,
+            LEFT_BRACKET,
+            RIGHT_BRACKET,
             EOL
-        };
-
-        struct KeywordToken {
-                std::string keyword;
-                TokenType token;
         };
 
         using TokenData = std::variant<std::monostate, std::string, int, char>;
@@ -84,5 +83,4 @@ class Tokenizer {
         std::unique_ptr<IO> io_;
         TokenType current_token_;
         TokenData token_data_;
-        std::vector<KeywordToken> keywords_;
 };
