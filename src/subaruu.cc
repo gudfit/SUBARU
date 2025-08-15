@@ -1,4 +1,4 @@
-// src/subaruu.cc
+// subaruu.cc
 
 #include "../include/subaruu.h"
 #include "../include/common.h"
@@ -6,8 +6,11 @@
 
 #include <cctype>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string_view>
+#include <unordered_map>
+#include <variant>
 
 /**
  * Constructs a new SUBARUU object and initialize with the given source file.
@@ -20,9 +23,7 @@ SUBARUU::SUBARUU(std::string_view source)
   , execution_finished_(false) {
     if (!tokenizer_)
         throw std::runtime_error("Failed to initialize Tokenizer");
-    // Initialize all variables (a-z) to 0
-    for (char c = 'a'; c <= 'z'; ++c)
-        variables_[c] = 0;
+    variables_.fill(value_t(0));
 }
 
 /**
@@ -102,9 +103,16 @@ SUBARUU::value_t SUBARUU::safe_divide(value_t numerator, value_t denominator) {
         dprintf("*warning: divide by zero", E_WARNING);
         if (SUBARUU_TERMINATE_ON_DIV_ZERO)
             dprintf("Division by zero", E_ERROR);
-        return SUBARUU_DIVIDE_BY_ZERO_RESULT;
+        return 0;
     }
-    return numerator / denominator;
+    try {
+        return numerator / denominator;
+    } catch (const std::overflow_error&) {
+        dprintf("*warning: divide by zero", E_WARNING);
+        if (SUBARUU_TERMINATE_ON_DIV_ZERO)
+            dprintf("Division by zero", E_ERROR);
+        return 0;
+    }
 }
 
 /**
@@ -120,44 +128,38 @@ SUBARUU::value_t SUBARUU::safe_divide(value_t numerator, value_t denominator) {
 SUBARUU::value_t SUBARUU::factor() {
     value_t result = 0;
     const auto token = tokenizer_->current_token();
-
     switch (token) {
         case Tokenizer::TokenType::NUMBER:
             result = tokenizer_->get_num();
             tokenizer_->next_token();
             break;
-
         case Tokenizer::TokenType::LETTER: {
             char var_name =
               static_cast<char>(std::tolower(static_cast<unsigned char>(
                 std::get<char>(tokenizer_->get_token_data()))));
             tokenizer_->next_token();
-            // Optional indexed memory: a[expr]
             if (tokenizer_->current_token() ==
                 Tokenizer::TokenType::LEFT_BRACKET) {
                 tokenizer_->next_token(); // skip '['
                 value_t idx = expression();
                 accept(Tokenizer::TokenType::RIGHT_BRACKET);
-                result = memory_[static_cast<long long>(idx)];
+                auto it = memory_.find(idx);
+                result = (it != memory_.end()) ? it->second : 0;
             } else {
-                result =
-                  variables_.contains(var_name) ? variables_[var_name] : 0;
+                result = variables_[var_name - 'a'];
             }
             break;
         }
-
         case Tokenizer::TokenType::LEFT_PAREN:
             tokenizer_->next_token();
             result = expression();
             accept(Tokenizer::TokenType::RIGHT_PAREN);
             break;
-
-        case Tokenizer::TokenType::MINUS: { // unary minus
+        case Tokenizer::TokenType::MINUS: {
             tokenizer_->next_token();
             result = -factor();
             break;
         }
-
         default:
             dprintf("Syntax Error: Unexpected token in factor: " +
                       std::string(tokenizer_->token_to_string(token)),
@@ -180,9 +182,10 @@ SUBARUU::value_t SUBARUU::term() {
         auto op = token;
         tokenizer_->next_token();
         value_t rhs = factor();
-        result = (op == Tokenizer::TokenType::ASTERISK)
-                   ? (result * rhs)
-                   : safe_divide(result, rhs);
+        if (op == Tokenizer::TokenType::ASTERISK)
+            result *= rhs;
+        else
+            result = safe_divide(result, rhs);
         token = tokenizer_->current_token();
     }
     return result;
@@ -198,21 +201,21 @@ SUBARUU::value_t SUBARUU::term() {
 SUBARUU::value_t SUBARUU::expression() {
     value_t result = term();
     auto token = tokenizer_->current_token();
-
     // Special stop if the next token is a valid line-number; leave it for the
     // caller.
     if (token == Tokenizer::TokenType::NUMBER &&
         is_valid_line_number(tokenizer_->get_num())) {
         return result;
     }
-
     while (token == Tokenizer::TokenType::PLUS ||
            token == Tokenizer::TokenType::MINUS) {
         auto op = token;
         tokenizer_->next_token();
         value_t rhs = term();
-        result =
-          (op == Tokenizer::TokenType::PLUS) ? (result + rhs) : (result - rhs);
+        if (op == Tokenizer::TokenType::PLUS)
+            result += rhs;
+        else
+            result -= rhs;
         token = tokenizer_->current_token();
     }
     return result;
@@ -260,7 +263,6 @@ int SUBARUU::relation() {
  * @throws std::runtime_error on syntax errors
  */
 void SUBARUU::let_statement() {
-    // variable or indexed memory on LHS
     if (tokenizer_->current_token() != Tokenizer::TokenType::LETTER) {
         dprintf("Syntax Error: Expected variable name", E_ERROR);
         return;
@@ -268,7 +270,6 @@ void SUBARUU::let_statement() {
     char var_name = static_cast<char>(std::tolower(static_cast<unsigned char>(
       std::get<char>(tokenizer_->get_token_data()))));
     tokenizer_->next_token();
-
     bool indexed = false;
     value_t idx = 0;
     if (tokenizer_->current_token() == Tokenizer::TokenType::LEFT_BRACKET) {
@@ -277,15 +278,12 @@ void SUBARUU::let_statement() {
         idx = expression();
         accept(Tokenizer::TokenType::RIGHT_BRACKET);
     }
-
     accept(Tokenizer::TokenType::EQUAL);
     value_t value = expression();
-
-    if (indexed) {
-        memory_[static_cast<long long>(idx)] = value;
-    } else {
-        variables_[var_name] = value;
-    }
+    if (indexed)
+        memory_[idx] = value;
+    else
+        variables_[var_name - 'a'] = value;
 }
 
 /**
@@ -298,16 +296,14 @@ void SUBARUU::if_statement() {
     accept(Tokenizer::TokenType::IF);
     int cond = relation();
     accept(Tokenizer::TokenType::THEN);
-
     if (tokenizer_->current_token() != Tokenizer::TokenType::NUMBER) {
         dprintf("Syntax Error: Expected line number after THEN", E_ERROR);
         return;
     }
-    int line_number = tokenizer_->get_num();
+    int line_number = static_cast<int>(tokenizer_->get_num());
     tokenizer_->next_token();
-
     if (cond) {
-        if (!line_positions_.contains(line_number)) {
+        if (line_positions_.find(line_number) == line_positions_.end()) {
             dprintf("Runtime Error: Line number " +
                       std::to_string(line_number) + " not found",
                     E_ERROR);
@@ -331,12 +327,11 @@ void SUBARUU::if_statement() {
  */
 void SUBARUU::goto_statement() {
     accept(Tokenizer::TokenType::GOTO);
-    int line_number = tokenizer_->get_num();
+    int line_number = static_cast<int>(tokenizer_->get_num());
     accept(Tokenizer::TokenType::NUMBER);
     if (tokenizer_->current_token() == Tokenizer::TokenType::EOL)
         tokenizer_->next_token();
-
-    if (!line_positions_.contains(line_number)) {
+    if (line_positions_.find(line_number) == line_positions_.end()) {
         dprintf("Runtime Error: Line number " + std::to_string(line_number) +
                   " not found",
                 E_ERROR);
@@ -362,7 +357,7 @@ bool SUBARUU::find_target_line(int line_number) {
     while (!tokenizer_->finished()) {
         auto tok = tokenizer_->current_token();
         if (at_line_start && tok == Tokenizer::TokenType::NUMBER &&
-            tokenizer_->get_num() == line_number) {
+            static_cast<int>(tokenizer_->get_num()) == line_number) {
             tokenizer_->next_token();
             return true;
         }
@@ -434,8 +429,7 @@ bool SUBARUU::is_statement_end(Tokenizer::TokenType token) const {
 bool SUBARUU::is_line_number() const {
     if (tokenizer_->current_token() != Tokenizer::TokenType::NUMBER)
         return false;
-    const int num = tokenizer_->get_num();
-    return is_valid_line_number(num);
+    return is_valid_line_number(tokenizer_->get_num());
 }
 
 /**
@@ -445,8 +439,8 @@ bool SUBARUU::is_line_number() const {
  * @param num The number to check
  * @return bool True if this appears to be a line number
  */
-bool SUBARUU::is_valid_line_number(int num) const {
-    return num >= 10 && num % 10 == 0;
+bool SUBARUU::is_valid_line_number(const value_t& num) const {
+    return num >= 10 && (num % 10 == 0);
 }
 
 /**
@@ -508,13 +502,13 @@ void SUBARUU::build_line_map() {
 #ifdef DEBUG_MODE
     std::unordered_map<int, bool> found_lines;
 #endif
-
-    bool at_line_start = true; // we begin at start of file/line
+    bool at_line_start = true;
     while (!tokenizer_->finished()) {
         auto tok = tokenizer_->current_token();
         if (at_line_start && tok == Tokenizer::TokenType::NUMBER) {
-            int value = tokenizer_->get_num();
-            if (is_valid_line_number(value)) {
+            value_t num_val = tokenizer_->get_num();
+            if (is_valid_line_number(num_val)) {
+                int value = static_cast<int>(num_val);
                 line_positions_[value] = true;
 #ifdef DEBUG_MODE
                 found_lines[value] = true;

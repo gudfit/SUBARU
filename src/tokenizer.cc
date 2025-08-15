@@ -1,6 +1,9 @@
+// tokenizer.cc
+
 #include "../include/tokenizer.h"
 #include "../include/common.h"
 
+#include <boost/multiprecision/cpp_int.hpp>
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
@@ -234,9 +237,9 @@ std::string_view Tokenizer::get_string() const {
  * @return Integer value if token contains number,
  *         0 otherwise
  */
-int Tokenizer::get_num() const {
-    if (std::holds_alternative<int>(token_data_))
-        return std::get<int>(token_data_);
+boost::multiprecision::cpp_int Tokenizer::get_num() const {
+    if (std::holds_alternative<boost::multiprecision::cpp_int>(token_data_))
+        return std::get<boost::multiprecision::cpp_int>(token_data_);
     return 0;
 }
 
@@ -307,12 +310,10 @@ Tokenizer::TokenType Tokenizer::get_next_token() {
     if (io_->eof())
         return TokenType::EOF_TOKEN;
     char c = io_->current();
-    // Skip spaces and tabs, but not newlines
     while (!io_->eof() && (c == ' ' || c == '\t')) {
         io_->next();
         c = io_->current();
     }
-    // EOL
     if (c == '\n' || c == '\r') {
         if (c == '\r') {
             io_->next();
@@ -323,13 +324,10 @@ Tokenizer::TokenType Tokenizer::get_next_token() {
         }
         return TokenType::EOL;
     }
-    // Handle quoted strings
     if (c == '"')
         return token_string();
-    // Handle numbers
     if (std::isdigit(static_cast<unsigned char>(c)))
         return token_number();
-    // Handle keywords and variables
     if (std::isalpha(static_cast<unsigned char>(c))) {
         if (std::isupper(static_cast<unsigned char>(c)))
             return token_keyword();
@@ -337,12 +335,10 @@ Tokenizer::TokenType Tokenizer::get_next_token() {
         io_->next();
         return TokenType::LETTER;
     }
-    // Handle separators
     if (c == ',' || c == ';') {
         io_->next();
         return TokenType::SEPARATOR;
     }
-    // Handle operators and other tokens
     switch (c) {
         case '=':
             io_->next();
@@ -412,7 +408,7 @@ Tokenizer::TokenType Tokenizer::get_next_token() {
  */
 Tokenizer::TokenType Tokenizer::token_string() {
     std::string str;
-    io_->next(); // skip opening quote
+    io_->next(); // skip "
     while (!io_->eof()) {
         char c = io_->current();
         if (c == '"') {
@@ -457,7 +453,6 @@ Tokenizer::TokenType Tokenizer::token_keyword() {
     }
     while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t'))
         io_->next();
-
     if (keyword == "REM")
         return TokenType::REM;
     if (keyword == "PRINT")
@@ -492,21 +487,27 @@ Tokenizer::TokenType Tokenizer::token_number() {
     while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t'))
         io_->next();
     while (!io_->eof() &&
-           std::isdigit(static_cast<unsigned char>(io_->current())) &&
-           num_str.size() < SUBARUU_NUMBER_LITERAL) {
+           std::isdigit(static_cast<unsigned char>(io_->current()))) {
+        if (num_str.size() >= SUBARUU_NUMBER_LITERAL) {
+            return TokenType::ERROR;
+        }
         num_str += io_->current();
         io_->next();
     }
-    if (!num_str.empty()) {
-        try {
-            token_data_ = std::stoi(num_str);
-            while (!io_->eof() &&
-                   (io_->current() == ' ' || io_->current() == '\t'))
-                io_->next();
-            return TokenType::NUMBER;
-        } catch (...) {
-            return TokenType::ERROR;
-        }
+    if (num_str.empty())
+        return TokenType::ERROR;
+    using boost::multiprecision::cpp_int;
+    cpp_int value = 0;
+    const cpp_int ten = 10;
+    for (char ch : num_str) {
+        value *= ten;
+        const cpp_int d = static_cast<unsigned>(ch - '0');
+        value += d;
     }
-    return TokenType::ERROR;
+
+    token_data_ = value;
+    while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t'))
+        io_->next();
+
+    return TokenType::NUMBER;
 }
