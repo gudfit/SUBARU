@@ -1,8 +1,0 @@
-REM Testing combined features
-10 LET a = 1
-20 PRINT "Value:", a
-30 IF a < 3 THEN 50
-40 PRINT "Skipped"
-50 LET a = a + 1
-60 IF a < 4 THEN 20
-70 PRINT "Done"

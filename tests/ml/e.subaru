@@ -1,0 +1,22 @@
+10 REM Moving average length 3 with TAB-aligned output
+20 REM Make a small, non-linear sequence (squares) to keep it interesting
+30 LET m[100]=0
+40 LET m[101]=1
+50 LET m[102]=4
+60 LET m[103]=9
+70 LET m[104]=16
+80 LET m[105]=25
+90 LET m[106]=36
+100 LET m[107]=49
+110 PRINT "i", TAB(4), "x", TAB(6), "avg3"
+120 LET a=0
+130 IF a=6 THEN 220
+140 LET g=m[100+a]+m[101+a]+m[102+a]
+150 LET h=g/3
+160 LET m[300+a]=h
+170 REM Row print: PRINT$ (no newline) + PRINT to end line
+180 PRINT$ a, TAB(6), m[100+a], TAB(6), m[300+a]
+190 PRINT
+200 LET a=a+1
+210 GOTO 130
+220 PRINT "done"

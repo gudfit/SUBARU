@@ -1,0 +1,8 @@
+10 LET n = 100
+20 LET i = 1
+30 LET f = 1
+40 IF i > n THEN 80
+50 LET f = f * i
+60 LET i = i + 1
+70 GOTO 40
+80 PRINT f

@@ -1,0 +1,10 @@
+10 LET x = 27
+20 PRINT x
+25 IF x = 1 THEN 9990
+30 LET r = x - (x/2)*2
+40 IF r = 0 THEN 60
+50 LET x = 3*x + 1
+55 GOTO 20
+60 LET x = x / 2
+70 GOTO 20
+9990 REM end

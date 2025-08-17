@@ -1,0 +1,16 @@
+10 LET m = 200
+20 LET i = 2
+30 LET f = 1
+40 LET d = 2
+50 IF d*d > i THEN 90
+60 LET r = i - (i/d)*d
+70 IF r = 0 THEN 80
+75 LET d = d + 1
+77 GOTO 50
+80 LET f = 0
+90 IF f = 1 THEN 95
+92 GOTO 100
+95 PRINT i
+100 LET i = i + 1
+110 IF i <= m THEN 30
+120 REM done

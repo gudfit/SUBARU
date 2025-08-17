@@ -1,3 +1,5 @@
+// io.h
+
 #pragma once
 #include <fstream>
 #include <string>
@@ -11,7 +13,7 @@ class IO {
         explicit IO(std::string_view filename); // Can throw
         ~IO() noexcept;
 
-        // Iterator operations
+        // Iterators
         [[nodiscard]] iterator begin() noexcept { return content_.begin(); }
         [[nodiscard]] iterator end() noexcept { return content_.end(); }
         [[nodiscard]] const_iterator begin() const noexcept {
@@ -21,20 +23,19 @@ class IO {
             return content_.end();
         }
 
-        // Get current position
+        // Position
         [[nodiscard]] iterator position() noexcept { return current_pos_; }
         [[nodiscard]] const_iterator position() const noexcept {
             return current_pos_;
         }
 
-        // Basic operations
-        int peek();
+        // Char access
         [[nodiscard]] char current() const noexcept {
-            return current_pos_ != content_.end() ? *current_pos_ : 0;
+            return current_pos_ != content_.end() ? *current_pos_ : '\0';
         }
         iterator next() noexcept {
             if (current_pos_ != content_.end()) {
-                return ++current_pos_;
+                ++current_pos_;
             }
             return current_pos_;
         }
@@ -42,17 +43,18 @@ class IO {
             return current_pos_ == content_.end();
         }
 
-        // Peek operations
+        // Lookahead 1 character (or '\0')
         [[nodiscard]] char peek() const noexcept {
-            auto next_pos = current_pos_;
-            if (next_pos != content_.end() &&
-                std::next(next_pos) != content_.end()) {
-                return *std::next(next_pos);
+            auto it = current_pos_;
+            if (it != content_.end()) {
+                ++it;
+                if (it != content_.end())
+                    return *it;
             }
-            return 0;
+            return '\0';
         }
 
-        // File operations
+        // File ops
         void reset() noexcept;
         void seek(long offset,
                   std::ios_base::seekdir whence = std::ios::beg); // Can throw
@@ -60,20 +62,19 @@ class IO {
         void set(std::string_view filename);                      // Can throw
         void close() noexcept;
 
-        // State queries
+        // State
         [[nodiscard]] bool has_next_token() const noexcept { return !eof(); }
-
         [[nodiscard]] bool is_at_keyword() const noexcept {
-            return current() >= 'A' && current() <= 'Z';
+            const auto c = current();
+            return c >= 'A' && c <= 'Z';
         }
 
-        // Access to file info
+        // File info
         [[nodiscard]] std::string_view file() const noexcept {
             return filename_;
         }
 
     private:
-        // Loads entire file into content_
         void load_file();
         std::string filename_;
         std::string content_;

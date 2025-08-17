@@ -1,0 +1,15 @@
+10 LET a = 0
+20 LET b = 1
+30 LET n = 100
+40 PRINT a
+50 IF n = 1 THEN 9990
+60 PRINT b
+70 LET n = n - 2
+80 IF n = 0 THEN 9990
+90 LET t = a + b
+100 PRINT t
+110 LET a = b
+120 LET b = t
+130 LET n = n - 1
+140 IF n > 0 THEN 90
+9990 REM done
