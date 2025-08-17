@@ -1,3 +1,5 @@
+// FILE: include/subaruu.h
+// --------------------------------------------------------------------------------
 // subaruu.h
 
 #pragma once
@@ -41,7 +43,7 @@ class SUBARUU {
         void let_statement();
         void if_statement();
         void goto_statement();
-        void print_statement();
+        void print_statement(bool newline = true);
         // Line helpers
         void build_line_map();
         bool find_target_line(int line_number);

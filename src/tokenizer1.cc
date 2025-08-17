@@ -28,7 +28,7 @@ Tokenizer::Tokenizer(std::string_view source)
 }
 
 /**
- * Tokenizer Destructor
+ * Tokenizer Constructor
  *
  * Cleans up tokenizer resources
  * Ensures IO stream is properly closed if it exists
@@ -146,9 +146,9 @@ std::string_view Tokenizer::token_to_string(TokenType token) const {
             return "THEN";
         case TokenType::PRINT:
             return "PRINT";
-        case TokenType::PRINT_DOLLAR: // NEW
+        case TokenType::PRINT_DOLLAR:
             return "PRINT$";
-        case TokenType::TAB: // NEW
+        case TokenType::TAB:
             return "TAB";
         case TokenType::REM:
             return "REM";
@@ -344,9 +344,6 @@ Tokenizer::TokenType Tokenizer::get_next_token() {
         return TokenType::SEPARATOR;
     }
     switch (c) {
-        case ':': // NEW: treat ':' as statement separator (EOL)
-            io_->next();
-            return TokenType::EOL;
         case '=':
             io_->next();
             return TokenType::EQUAL;
@@ -459,7 +456,6 @@ Tokenizer::TokenType Tokenizer::token_keyword() {
         io_->next();
     }
 
-    // Detect PRINT$ (no whitespace allowed between T and $)
     if (!io_->eof() && keyword == "PRINT" && io_->current() == '$') {
         io_->next(); // consume '$'
         while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t'))
@@ -482,7 +478,7 @@ Tokenizer::TokenType Tokenizer::token_keyword() {
         return TokenType::THEN;
     if (keyword == "GOTO")
         return TokenType::GOTO;
-    if (keyword == "TAB") // allow TAB(n) inside PRINT/PRINT$
+    if (keyword == "TAB")
         return TokenType::TAB;
 
     return TokenType::ERROR;
@@ -524,6 +520,7 @@ Tokenizer::TokenType Tokenizer::token_number() {
         const cpp_int d = static_cast<unsigned>(ch - '0');
         value += d;
     }
+
     token_data_ = value;
     while (!io_->eof() && (io_->current() == ' ' || io_->current() == '\t'))
         io_->next();

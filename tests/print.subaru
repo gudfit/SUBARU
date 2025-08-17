@@ -1,0 +1,21 @@
+10 REM ---- Basic checks for PRINT / PRINT$ / TAB(n) ----
+20 PRINT "== Testing PRINT and TAB =="
+30 PRINT "Hello", TAB(5), "world!"
+40 PRINT "Numbers:", TAB(3), 7*8, ",", 1+2+3
+
+50 REM ---- PRINT$ keeps cursor on the same line ----
+60 PRINT$ "PRINT$ keeps cursor here ->"
+70 PRINT$ TAB(2)
+80 PRINT$ "[no newline yet]"
+90 PRINT "  now newline."
+
+100 REM ---- Variables with TAB(expr) ----
+110 LET a = 4
+120 PRINT "a=", a, ", TAB(a+2) ->", TAB(a+2), "|X|"
+
+130 REM ---- More PRINT$ mixing text and numbers ----
+140 PRINT$ "123"
+150 PRINT$ TAB(3)
+160 PRINT "456"
+
+170 PRINT "Done."

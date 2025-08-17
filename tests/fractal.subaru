@@ -1,0 +1,104 @@
+10 REM ==== FRACTALS DEMO: Sierpinski / Mandelbrot ====
+20 GOTO 30
+
+30 REM ---- Sierpinski (via Rule-90 parity) ----
+40 PRINT "== Sierpinski Triangle =="
+50 LET w = 63
+60 LET h = 32
+70 LET c = 1000
+80 LET n = 2000
+90 LET p = w / 2
+100 LET a[c + p] = 1
+110 LET i = 0
+120 GOTO 130
+
+130 LET j = 0
+140 IF j < w THEN 170
+150 PRINT
+160 GOTO 240
+170 LET v = a[c + j]
+180 IF v THEN 210
+190 PRINT$ " "
+200 GOTO 220
+210 PRINT$ "#"
+220 LET j = j + 1
+230 GOTO 140
+
+240 LET j = 0
+250 IF j < w THEN 270
+260 GOTO 390
+270 IF j THEN 300
+280 LET l = 0
+290 GOTO 310
+300 LET l = a[c + (j - 1)]
+310 IF (j + 1) < w THEN 340
+320 LET r = 0
+330 GOTO 350
+340 LET r = a[c + (j + 1)]
+350 LET q = l + r - 2 * l * r
+360 LET a[n + j] = q
+370 LET j = j + 1
+380 GOTO 250
+
+390 LET j = 0
+400 IF j < w THEN 450
+410 LET i = i + 1
+420 IF i < h THEN 130
+430 PRINT
+440 GOTO 990
+450 LET a[c + j] = a[n + j]
+460 LET j = j + 1
+470 GOTO 400
+
+480 REM ---- Spacer ----
+490 PRINT
+500 GOTO 990
+
+990 REM ---- Blocky Mandelbrot (fixed-point) ----
+1000 PRINT "== Blocky Mandelbrot =="
+1010 LET s = 1000
+1020 LET a = -2200
+1030 LET b = 1000
+1040 LET c = -1100
+1050 LET d = 1100
+1060 LET w = 64
+1070 LET h = 24
+1080 LET p = (b - a) / (w - 1)
+1090 LET q = (d - c) / (h - 1)
+1100 LET r = 4 * s * s
+1110 LET y = 0
+1120 IF y < h THEN 1140
+1130 GOTO 1450
+1140 LET e = d - y * q
+1150 LET x = 0
+1160 IF x < w THEN 1200
+1170 PRINT
+1180 LET y = y + 1
+1190 GOTO 1120
+1200 LET f = a + x * p
+1210 LET z = 0
+1220 LET u = 0
+1230 LET k = 0
+1240 LET v = 1
+1250 IF k < 20 THEN 1270
+1260 GOTO 1390
+1270 LET t = z * z
+1280 LET o = u * u
+1290 LET m = t + o
+1300 IF m > r THEN 1370
+1310 LET n = (t - o) / s + f
+1320 LET g = (2 * z * u) / s + e
+1330 LET z = n
+1340 LET u = g
+1350 LET k = k + 1
+1360 GOTO 1250
+1370 LET v = 0
+1380 GOTO 1390
+1390 IF v THEN 1420
+1400 PRINT$ " "
+1410 GOTO 1430
+1420 PRINT$ "#"
+1430 LET x = x + 1
+1440 GOTO 1160
+
+1450 PRINT "Done."

@@ -38,6 +38,8 @@ class Tokenizer {
             IF,
             THEN,
             PRINT,
+            PRINT_DOLLAR,
+            TAB,
             REM,
             GOTO,
             LEFT_PAREN,

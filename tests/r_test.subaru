@@ -1,2 +1,0 @@
-10 LET a = 5
-20 PRINT a

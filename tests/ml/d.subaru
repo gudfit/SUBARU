@@ -1,0 +1,57 @@
+10 REM Brute-force learn 1D kernel (k0,k1,k2 in -2..2)
+20 REM Input x[0..7] in m[100..107]
+30 LET m[100]=1
+40 LET m[101]=2
+50 LET m[102]=3
+60 LET m[103]=4
+70 LET m[104]=5
+80 LET m[105]=6
+90 LET m[106]=7
+100 LET m[107]=8
+110 REM Target y[0..5] = conv(x,[1,1,1]) = [6,9,12,15,18,21] in m[400..405]
+120 LET m[400]=6
+130 LET m[401]=9
+140 LET m[402]=12
+150 LET m[403]=15
+160 LET m[404]=18
+170 LET m[405]=21
+180 LET s=0 : REM best k0
+190 LET t=0 : REM best k1
+200 LET u=0 : REM best k2
+210 LET v=999999 : REM best SSE
+220 LET p=-2
+230 IF p=3 THEN 470
+240 LET q=-2
+250 IF q=3 THEN 450
+260 LET r=-2
+270 IF r=3 THEN 430
+280 LET w=0 : REM current SSE
+290 LET a=0
+300 IF a=6 THEN 380
+310 LET g=p*m[100+a]+q*m[101+a]+r*m[102+a]
+320 LET e=g-m[400+a]
+330 LET w=w+e*e
+340 LET a=a+1
+350 GOTO 300
+380 IF w<v THEN 400
+390 GOTO 410
+400 LET v=w
+405 LET s=p
+406 LET t=q
+407 LET u=r
+410 LET r=r+1
+420 GOTO 270
+430 LET q=q+1
+440 GOTO 250
+450 LET p=p+1
+460 GOTO 230
+470 PRINT "best k:", s, t, u, "err", v
+480 PRINT "pred:"
+490 LET a=0
+500 IF a=6 THEN 600
+510 LET g=s*m[100+a]+t*m[101+a]+u*m[102+a]
+520 LET m[300+a]=g
+530 PRINT "y[", a, "]=", m[300+a], " (target ", m[400+a], ")"
+540 LET a=a+1
+550 GOTO 500
+600 PRINT "done"

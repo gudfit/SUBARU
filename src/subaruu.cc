@@ -1,3 +1,5 @@
+// FILE: src/subaruu.cc
+// --------------------------------------------------------------------------------
 // subaruu.cc
 
 #include "../include/subaruu.h"
@@ -368,11 +370,18 @@ bool SUBARUU::find_target_line(int line_number) {
 }
 
 /**
- * Executes a PRINT statement.
- * Format: PRINT [expression|string|separator]...
+ * Executes a PRINT/PRINT$ statement.
+ * Format: PRINT [expression|string|separator|TAB(n)]...
+ *         PRINT$ [expression|string|separator|TAB(n)]...
+ * PRINT$ does not emit a trailing newline.
  */
-void SUBARUU::print_statement() {
-    accept(Tokenizer::TokenType::PRINT);
+void SUBARUU::print_statement(bool newline) {
+    // Accept either PRINT or PRINT$
+    if (tokenizer_->current_token() == Tokenizer::TokenType::PRINT)
+        accept(Tokenizer::TokenType::PRINT);
+    else
+        accept(Tokenizer::TokenType::PRINT_DOLLAR);
+
     bool need_space = false;
     while (!tokenizer_->finished()) {
         auto token = tokenizer_->current_token();
@@ -391,6 +400,27 @@ void SUBARUU::print_statement() {
                 std::cout << " ";
                 tokenizer_->next_token();
                 break;
+            case Tokenizer::TokenType::TAB: {
+                tokenizer_->next_token();
+                accept(Tokenizer::TokenType::LEFT_PAREN);
+                value_t n = expression();
+                accept(Tokenizer::TokenType::RIGHT_PAREN);
+                // Clamp to a reasonable limit to avoid huge output
+                if (n < 0)
+                    n = 0;
+                if (n > 1000)
+                    n = 1000;
+                std::size_t count = 0;
+                try {
+                    count = static_cast<std::size_t>(
+                      n.convert_to<unsigned long long>());
+                } catch (...) {
+                    count = 0;
+                }
+                std::cout << std::string(count, ' ');
+                need_space = false;
+                break;
+            }
             case Tokenizer::TokenType::LETTER:
             case Tokenizer::TokenType::NUMBER:
             case Tokenizer::TokenType::LEFT_PAREN:
@@ -405,7 +435,9 @@ void SUBARUU::print_statement() {
         }
     }
 end_print:
-    std::cout << std::endl;
+    if (newline)
+        std::cout << std::endl;
+
     auto final_token = tokenizer_->current_token();
     if (is_line_number())
         return;
@@ -445,7 +477,7 @@ bool SUBARUU::is_valid_line_number(const value_t& num) const {
 
 /**
  * Executes a statement based on the current token.
- * Handles REM, PRINT, IF, GOTO, and LET statements.
+ * Handles REM, PRINT/PRINT$, IF, GOTO, and LET statements.
  *
  * @throws std::runtime_error on syntax errors
  */
@@ -456,7 +488,10 @@ void SUBARUU::statement() {
             tokenizer_->skip_to_eol();
             break;
         case Tokenizer::TokenType::PRINT:
-            print_statement();
+            print_statement(true);
+            break;
+        case Tokenizer::TokenType::PRINT_DOLLAR:
+            print_statement(false);
             break;
         case Tokenizer::TokenType::IF:
             if_statement();

@@ -1,0 +1,48 @@
+10 REM Perceptron AND gate (learns)
+20 LET c=0
+30 LET d=0
+40 LET e=0
+50 LET f=1
+60 LET a=0
+70 LET m[100]=0
+80 LET m[200]=0
+90 LET m[300]=0
+100 LET m[101]=0
+110 LET m[201]=1
+120 LET m[301]=0
+130 LET m[102]=1
+140 LET m[202]=0
+150 LET m[302]=0
+160 LET m[103]=1
+170 LET m[203]=1
+180 LET m[303]=1
+190 LET b=10
+200 IF b=0 THEN 500
+210 LET a=0
+220 IF a=4 THEN 340
+230 LET g=c*m[100+a]+d*m[200+a]+e
+240 IF g<0 THEN 270
+250 LET h=1
+260 GOTO 280
+270 LET h=0
+280 LET r=m[300+a]-h
+290 LET c=c+f*r*m[100+a]
+300 LET d=d+f*r*m[200+a]
+310 LET e=e+f*r
+320 LET a=a+1
+330 GOTO 220
+340 LET b=b-1
+350 GOTO 200
+500 PRINT "Trained weights:", c, d, e
+510 PRINT "x1 x2 -> yhat"
+520 LET a=0
+530 IF a=4 THEN 700
+540 LET g=c*m[100+a]+d*m[200+a]+e
+550 IF g<0 THEN 580
+560 LET h=1
+570 GOTO 590
+580 LET h=0
+590 PRINT m[100+a], m[200+a], "->", h
+600 LET a=a+1
+610 GOTO 530
+700 PRINT "Done"

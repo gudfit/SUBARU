@@ -1,0 +1,25 @@
+10 REM 1-D convolution demo (edge-ish)
+20 LET a=0
+30 LET m[100]=0
+40 LET m[101]=0
+50 LET m[102]=3
+60 LET m[103]=0
+70 LET m[104]=0
+80 LET m[105]=5
+90 LET m[106]=0
+100 LET m[107]=0
+110 LET m[200]=1
+120 LET m[201]=0
+130 LET m[202]=-1
+140 IF a=6 THEN 260
+150 LET b=0
+160 LET g=0
+170 IF b=3 THEN 210
+180 LET g=g+m[100+a+b]*m[200+b]
+190 LET b=b+1
+200 GOTO 170
+210 LET m[300+a]=g
+220 PRINT "y[", a, "]=", m[300+a]
+230 LET a=a+1
+240 GOTO 140
+260 PRINT "conv done"
